@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sql-server
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${DB_PASSWORD}" # Using variable from .env file
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-server-data:/var/opt/mssql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  auth-api:
+    container_name: auth-api
+    build:
+      context: ..
+      dockerfile: src/services/AcademyIO.Auth.API/Dockerfile
+    ports:
+      - "8081:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sql-server;Database=AuthDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true;
+      - MessageQueueConnection__MessageBus=host=rabbitmq
+    depends_on:
+      - sql-server
+      - rabbitmq
+
+  courses-api:
+    container_name: courses-api
+    build:
+      context: ..
+      dockerfile: src/services/AcademyIO.Courses.API/Dockerfile
+    ports:
+      - "8082:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sql-server;Database=CoursesDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true;
+    depends_on:
+      - sql-server
+
+  students-api:
+    container_name: students-api
+    build:
+      context: ..
+      dockerfile: src/services/AcademyIO.Students.API/Dockerfile
+    ports:
+      - "8083:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sql-server;Database=StudentsDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true;
+    depends_on:
+      - sql-server
+
+  payments-api:
+    container_name: payments-api
+    build:
+      context: ..
+      dockerfile: src/services/AcademyIO.Payments.API/Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sql-server;Database=PaymentsDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true;
+      - MessageQueueConnection__MessageBus=host=rabbitmq
+    depends_on:
+      - sql-server
+      - rabbitmq
+      
+  bff:
+    container_name: bff
+    build:
+      context: ..
+      dockerfile: src/api-gateways/AcademyIO.Bff/Dockerfile
+    ports:
+      - "8084:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - AppServicesSettings__AuthUrl=http://auth-api
+      - AppServicesSettings__CoursesUrl=http://courses-api
+      - AppServicesSettings__StudentsUrl=http://students-api
+      - AppServicesSettings__PaymentsUrl=http://payments-api
+    depends_on:
+      - auth-api
+      - courses-api
+      - students-api
+      - payments-api
+
+volumes:
+  sql-server-data:
+  rabbitmq-data:
