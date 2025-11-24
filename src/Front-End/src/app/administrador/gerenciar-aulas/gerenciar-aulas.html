@@ -1,0 +1,76 @@
+<!-- Cabeçalho -->
+<header class="bg-light border-bottom">
+  <div class="container py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center">
+      <div>
+        <h1 class="h4 fw-bold text-dark mb-1">
+          <i class="fas fa-list-ol me-2" style="color: #02a102;"></i>
+          Gerenciar Aulas
+        </h1>
+        @if (course$ | async; as course) {
+        <p class="text-muted mb-0">Curso: <strong>{{ course.name }}</strong></p>
+        }
+      </div>
+      <a [routerLink]="['/cadastrar-aula', courseId]" class="btn mt-2 mt-md-0"
+        style="background: linear-gradient(135deg, #02a102, #017a01); color: white; font-weight: 600; border: none;">
+        <i class="fas fa-plus me-2"></i> Nova Aula
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Lista de aulas -->
+<main class="py-4">
+  <div class="container">
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th width="50">#</th>
+                <th>Título da Aula</th>
+                <th width="120">Duração (h)</th>
+                <th width="180" class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (lesson of (lessons$ | async); track lesson.id; let i = $index) {
+              <tr>
+                <td class="align-middle fw-bold" style="color: #02a102;">{{ i + 1 }}</td>
+                <td class="align-middle">
+                  <div>
+                    <span class="fw-medium">{{ lesson.name }}</span>
+                  </div>
+                  <small class="text-muted">{{ lesson.subject }}</small>
+                </td>
+                <td class="align-middle">
+                  <span class="badge bg-light text-dark border">{{ lesson.totalHours }}h</span>
+                </td>
+                <td class="align-middle text-center">
+                  <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="4" class="text-center py-5 text-muted">
+                  <i class="fas fa-inbox fa-3x mb-3"></i>
+                  <h5 class="fw-bold">Nenhuma aula cadastrada</h5>
+                  <p class="mb-0">Clique em "Nova Aula" para começar.</p>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

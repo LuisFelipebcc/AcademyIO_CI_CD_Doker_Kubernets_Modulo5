@@ -1,0 +1,82 @@
+<section class="vh-100" style="background-color: #f8f9fa;">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="card shadow-2-strong" style="border-radius: 1rem;">
+          <div class="card-body p-5 text-center">
+
+            <h3 class="mb-5">Criar Conta</h3>
+
+            <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+              <div class="row">
+                <div class="col-md-6 mb-4">
+                  <div class="form-outline text-start">
+                    <label class="form-label" for="firstName">Nome</label>
+                    <input type="text" id="firstName" name="firstName" class="form-control form-control-lg"
+                      [(ngModel)]="credentials.firstName" required minlength="2" />
+                  </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                  <div class="form-outline text-start">
+                    <label class="form-label" for="lastName">Sobrenome</label>
+                    <input type="text" id="lastName" name="lastName" class="form-control form-control-lg"
+                      [(ngModel)]="credentials.lastName" required minlength="2" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-outline mb-4 text-start">
+                <label class="form-label" for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-control form-control-lg"
+                  [(ngModel)]="credentials.email" required email />
+              </div>
+
+              <div class="form-outline mb-4 text-start">
+                <label class="form-label" for="dateOfBirth">Data de Nascimento</label>
+                <input type="date" id="dateOfBirth" name="dateOfBirth" class="form-control form-control-lg"
+                  [(ngModel)]="credentials.dateOfBirth" required />
+              </div>
+
+              <div class="form-outline mb-4 text-start">
+                <label class="form-label" for="password">Senha</label>
+                <input type="password" id="password" name="password" class="form-control form-control-lg"
+                  [(ngModel)]="credentials.password" required minlength="6" />
+              </div>
+
+              <div class="form-outline mb-4 text-start">
+                <label class="form-label" for="confirmPassword">Confirmar Senha</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control form-control-lg"
+                  [(ngModel)]="credentials.confirmPassword" required /> @if (passwordMismatch) {
+                <div class="text-danger small mt-1">As senhas não coincidem.</div>
+                }
+              </div>
+
+              @if (errorMessage) {
+              <div class="alert alert-danger mt-3">
+                {{ errorMessage }}
+              </div>
+              } @if (successMessage) {
+
+              <div class="alert alert-success mt-3">
+                {{ successMessage }}
+              </div>
+              }
+
+              <button class="btn btn-lg btn-block w-100" [disabled]="!registerForm.form.valid" type="submit"
+                style="background-color: #02a102; color: white;">
+                Registrar
+              </button>
+            </form>
+
+            <hr class="my-4">
+
+            <p class="text-center">Já tem uma conta?
+              <a routerLink="/login" style="color: #02a102; text-decoration: none; font-weight: 500;">Faça login</a>
+            </p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

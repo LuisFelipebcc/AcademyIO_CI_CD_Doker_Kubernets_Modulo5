@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: courses-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: courses-api
+  template:
+    metadata:
+      labels:
+        app: courses-api
+    spec:
+      containers:
+        - name: courses-api
+          image: luisfelipekde/academyio-courses-api:latest # ATENÇÃO: Substitua 'luisfelipekde' pelo seu usuário no Docker Hub
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: courses-api-config
+            - secretRef:
+                name: courses-api-secret
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: courses-api-service
+spec:
+  selector:
+    app: courses-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: courses-api-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  DOTNET_RUNNING_IN_CONTAINER: "true"
+  ASPNETCORE_URLS: "http://*:80"
+  MessageBus__ConnectionString: "amqp://guest:guest@rabbitmq-service:5672/"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: courses-api-secret
+type: Opaque
+# --- ATENÇÃO ---
+# Este arquivo é um template. Os segredos reais NÃO devem ser versionados.
+# Crie o segredo no cluster Kubernetes antes de fazer o deploy.
+#
+# Exemplo de comando para criar o segredo:
+# kubectl create secret generic courses-api-secret \
+#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=CoursesDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true'
+#
+# O campo 'stringData' foi omitido intencionalmente do controle de versão.
+stringData: {}

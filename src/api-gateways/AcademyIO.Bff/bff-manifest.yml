@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bff
+  template:
+    metadata:
+      labels:
+        app: bff
+    spec:
+      containers:
+        - name: bff
+          image: luisfelipekde/academyio-bff:latest # ATENÇÃO: Substitua 'luisfelipekde' pelo seu usuário no Docker Hub
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: bff-config
+            - secretRef:
+                name: bff-secret
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bff-service
+spec:
+  selector:
+    app: bff
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer # Expõe o BFF para acesso externo
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bff-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  DOTNET_RUNNING_IN_CONTAINER: "true"
+  ASPNETCORE_URLS: "http://*:80"
+  AppServicesSettings__AuthUrl: "http://auth-api-service"
+  AppServicesSettings__CourseUrl: "http://courses-api-service"
+  AppServicesSettings__StudentUrl: "http://students-api-service"
+  AppServicesSettings__PaymentUrl: "http://payments-api-service"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bff-secret
+type: Opaque
+# --- ATENÇÃO ---
+# Este arquivo é um template. Os segredos reais NÃO devem ser versionados.
+# Crie o segredo no cluster Kubernetes antes de fazer o deploy.
+#
+# Exemplo de comando para criar o segredo:
+# kubectl create secret generic bff-secret \
+#   --from-literal=Jwt__Key='uma-chave-secreta-super-segura-para-producao'
+#
+# O campo 'stringData' foi omitido intencionalmente do controle de versão.
+stringData: {}

@@ -1,0 +1,60 @@
+name: Payments API CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'src/services/AcademyIO.Payments.API/**'
+      - 'src/building-blocks/**'
+      - 'src/.github/workflows/payments-ci.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'src/services/AcademyIO.Payments.API/**'
+      - 'src/building-blocks/**'
+      - 'src/.github/workflows/payments-ci.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore AcademyIO.sln
+
+      - name: Build
+        run: dotnet build --no-restore -c Release AcademyIO.sln
+
+      - name: Lint Check
+        run: dotnet format --verify-no-changes
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal AcademyIO.sln
+
+  build-and-push-docker-image:
+    needs: build
+    if: github.ref == 'refs/heads/main' && success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/services/AcademyIO.Payments.API/Dockerfile
+          push: true
+          tags: luisfelipekde/academyio-payments-api:latest # ATENÇÃO: Substitua 'luisfelipekde' pelo seu usuário no Docker Hub
