@@ -2,17 +2,17 @@ name: Auth API CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'src/services/AcademyIO.Auth.API/**'
-      - 'src/building-blocks/**'
-      - 'src/.github/workflows/auth-ci.yml'
+      - "src/services/AcademyIO.Auth.API/**"
+      - "src/building-blocks/**"
+      - "src/.github/workflows/auth-ci.yml"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'src/services/AcademyIO.Auth.API/**'
-      - 'src/building-blocks/**'
-      - 'src/.github/workflows/auth-ci.yml'
+      - "src/services/AcademyIO.Auth.API/**"
+      - "src/building-blocks/**"
+      - "src/.github/workflows/auth-ci.yml"
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
       - name: Restore dependencies
         run: dotnet restore AcademyIO.sln
@@ -57,4 +57,4 @@ jobs:
           context: .
           file: ./src/services/AcademyIO.Auth.API/Dockerfile
           push: true
-          tags: luisfelipekde/academyio-auth-api:latest # ATENÇÃO: Substitua 'luisfelipekde' pelo seu usuário no Docker Hub
+          tags: luisfelipebcc/academyio-auth-api:latest # ATENÇÃO: Substitua 'luisfelipebcc' pelo seu usuário no Docker Hub

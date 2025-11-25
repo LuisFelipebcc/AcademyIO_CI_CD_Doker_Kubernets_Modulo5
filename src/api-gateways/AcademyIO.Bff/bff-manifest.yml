@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: bff
-          image: luisfelipekde/academyio-bff:latest # ATENÇÃO: Substitua 'luisfelipekde' pelo seu usuário no Docker Hub
+          image: {{DOCKERHUB_USERNAME}}/academyio-bff:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

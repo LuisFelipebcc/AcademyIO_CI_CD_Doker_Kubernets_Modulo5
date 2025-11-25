@@ -21,6 +21,7 @@ Construído com uma abordagem baseada em microsserviços e princípios de **Doma
 ### 🛠️ Tecnologias Utilizadas
 
 **Back-End:**
+
 - C# 12 e .NET 8
 - ASP.NET Core Web API
 - Entity Framework Core 8
@@ -28,6 +29,7 @@ Construído com uma abordagem baseada em microsserviços e princípios de **Doma
 - Polly (para resiliência)
 
 **DevOps e Infraestrutura:**
+
 - Docker (multi-stage builds)
 - Docker Compose
 - Kubernetes (Kind, Minikube, ou qualquer cluster)
@@ -41,6 +43,7 @@ Construído com uma abordagem baseada em microsserviços e princípios de **Doma
 Esta seção descreve como executar o ambiente completo localmente usando Docker Compose e como fazer o deploy em um cluster Kubernetes.
 
 #### 📌 Pré-requisitos
+
 - **Docker Desktop:** Essencial para rodar os contêineres e o ambiente Docker Compose.
 - **kubectl:** Necessário para interagir com um cluster Kubernetes.
 - **Um cluster Kubernetes (opcional):** Se desejar fazer o deploy, pode usar [Kind](https://kind.sigs.k8s.io/) ou [Minikube](https://minikube.sigs.k8s.io/docs/start/) para um cluster local.
@@ -53,11 +56,13 @@ Esta é a forma recomendada para executar todo o ecossistema de microsserviços 
 
 1.  **(Opcional, mas recomendado) Crie um arquivo `.env` na pasta `src`**:
     Para evitar senhas hard-coded, crie um arquivo chamado `.env` dentro da pasta `src` e adicione a seguinte variável. O `docker-compose.yml` está configurado para usá-la.
+
     ```env
     DB_PASSWORD=YourStrong!Passw0rd
     ```
 
 2.  **Navegue até a pasta `src`**:
+
     ```bash
     cd src
     ```
@@ -67,9 +72,10 @@ Esta é a forma recomendada para executar todo o ecossistema de microsserviços 
     ```bash
     docker compose up --build -d
     ```
-    *Nota: Dependendo da sua instalação, talvez seja necessário usar `docker-compose` (com hífen).*
+    _Nota: Dependendo da sua instalação, talvez seja necessário usar `docker-compose` (com hífen)._
 
 Após a execução, os seguintes serviços estarão disponíveis:
+
 - **BFF (Gateway):** `http://localhost:8084`
 - **Auth API:** `http://localhost:8081`
 - **Courses API:** `http://localhost:8082`
@@ -121,6 +127,7 @@ kubectl create secret generic bff-secret \
 #### Passo 2: Faça o Deploy da Infraestrutura (SQL Server e RabbitMQ)
 
 Aplique os manifestos para os serviços de infraestrutura.
+
 ```bash
 # Navegue até a pasta src
 cd src
@@ -134,9 +141,10 @@ kubectl apply -f ./k8s/rabbitmq.yml
 
 Antes de aplicar os manifestos, você precisa **substituir o placeholder do nome de usuário do Docker Hub** nos arquivos `*-manifest.yml` de cada serviço.
 
-A imagem está no formato `luisfelipekde/<nome-da-imagem>:latest`. **Substitua `luisfelipekde` pelo seu usuário do Docker Hub** onde as imagens foram publicadas pelo pipeline. Você pode fazer isso manualmente ou usando um script com `sed`.
+A imagem está no formato `{{DOCKERHUB_USERNAME}}/<nome-da-imagem>:latest`. **Substitua `{{DOCKERHUB_USERNAME}}` pelo seu usuário do Docker Hub** ou configure o secret `DOCKERHUB_USERNAME` e use `${{ secrets.DOCKERHUB_USERNAME }}` nos workflows para etiquetar as imagens automaticamente.
 
 Depois de substituir, aplique os manifestos para cada serviço:
+
 ```bash
 # Estando na pasta src
 kubectl apply -f ./services/AcademyIO.Auth.API/auth-api-manifest.yml
@@ -159,5 +167,6 @@ Este repositório está configurado com pipelines de CI/CD em `.github/workflows
 - **Publicação:** Se as etapas anteriores passarem em um push para a `main`, uma imagem Docker é construída e publicada no Docker Hub.
 
 Para que a publicação funcione, você deve configurar os seguintes segredos no seu repositório GitHub (`Settings > Secrets and variables > Actions`):
+
 - `DOCKERHUB_USERNAME`: Seu nome de usuário do Docker Hub.
 - `DOCKERHUB_TOKEN`: Um token de acesso do Docker Hub com permissões de escrita.

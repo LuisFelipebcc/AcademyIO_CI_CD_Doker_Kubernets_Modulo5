@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: students-api
-          image: luisfelipekde/academyio-students-api:latest # ATENÇÃO: Substitua 'luisfelipekde' pelo seu usuário no Docker Hub
+          image: {{DOCKERHUB_USERNAME}}/academyio-students-api:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
