@@ -1,4 +1,10 @@
-﻿using AcademyIO.Core.Messages.Integration;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using AcademyIO.Core.Messages;
+using AcademyIO.Core.Messages.Integration;
 using AcademyIO.Courses.API.Application.Commands;
 using AcademyIO.MessageBus;
 using FluentValidation.Results;
@@ -52,7 +58,7 @@ namespace AcademyIO.Payments.API.Services
                 sucesso = await mediator.Send(command);
             }
             if (!sucesso)
-                validationResult.Errors.Add(new ValidationFailure() { ErrorMessage = "Falha ao realizar pagamento." });
+                validationResult.Errors.Add(new FluentValidation.Results.ValidationFailure() { ErrorMessage = "Falha ao realizar pagamento." });
             return new ResponseMessage(validationResult);
         }
     }
