@@ -15,14 +15,16 @@ COPY ["src/building-blocks/AcademyIO.MessageBus/AcademyIO.MessageBus.csproj", "s
 COPY ["src/building-blocks/AcademyIO.WebAPI.Core/AcademyIO.WebAPI.Core.csproj", "src/building-blocks/AcademyIO.WebAPI.Core/"]
 
 # Restore dependencies for the entire solution
-RUN dotnet restore "AcademyIO.sln"
+RUN dotnet restore "AcademyIO.sln" -v n
 
 # Copy the rest of the source code. .dockerignore will handle exclusions.
-COPY . .
+COPY ["src/", "src/"]
 
 # Publish the application.
 WORKDIR "/src/src/services/AcademyIO.Payments.API"
-RUN dotnet publish "AcademyIO.Payments.API.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
+# Ensure packages and project references are restored before publishing
+RUN dotnet restore "AcademyIO.Payments.API.csproj" \
+    && dotnet publish "AcademyIO.Payments.API.csproj" -c Release -o /app/publish /p:UseAppHost=false -v minimal
 
 # Stage 2: Final - Creates the final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
