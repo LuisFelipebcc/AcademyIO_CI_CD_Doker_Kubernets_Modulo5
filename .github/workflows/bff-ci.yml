@@ -57,4 +57,6 @@ jobs:
           context: .
           file: ./src/api-gateways/AcademyIO.Bff/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/academyio-bff:latest # Usar o nome de usuário do Docker Hub a partir do secret
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-bff:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-bff:latest
