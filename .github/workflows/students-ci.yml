@@ -57,4 +57,6 @@ jobs:
           context: .
           file: ./src/services/AcademyIO.Students.API/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/academyio-students-api:latest # Usar o nome de usuário do Docker Hub a partir do secret
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-students-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-students-api:latest

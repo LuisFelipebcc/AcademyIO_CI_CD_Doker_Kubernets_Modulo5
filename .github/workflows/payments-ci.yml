@@ -57,4 +57,6 @@ jobs:
           context: .
           file: ./src/services/AcademyIO.Payments.API/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/academyio-payments-api:latest # Usar o nome de usuário do Docker Hub a partir do secret
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-payments-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-payments-api:latest
