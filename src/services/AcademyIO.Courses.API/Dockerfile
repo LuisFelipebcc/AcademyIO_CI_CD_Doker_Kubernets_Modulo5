@@ -22,7 +22,9 @@ COPY ["src/", "src/"]
 
 # Publish the application.
 WORKDIR "/src/src/services/AcademyIO.Courses.API"
-RUN dotnet publish "AcademyIO.Courses.API.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
+# Ensure packages and project references are restored before publishing
+RUN dotnet restore "AcademyIO.Courses.API.csproj" \
+    && dotnet publish "AcademyIO.Courses.API.csproj" -c Release -o /app/publish /p:UseAppHost=false -v minimal
 
 # Stage 2: Final - Creates the final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
