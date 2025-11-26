@@ -18,7 +18,7 @@ COPY ["src/building-blocks/AcademyIO.WebAPI.Core/AcademyIO.WebAPI.Core.csproj", 
 RUN dotnet restore "AcademyIO.sln"
 
 # Copy the rest of the source code. .dockerignore will handle exclusions.
-COPY . .
+COPY ["src/", "src/"]
 
 # Publish the application.
 WORKDIR "/src/src/services/AcademyIO.Students.API"

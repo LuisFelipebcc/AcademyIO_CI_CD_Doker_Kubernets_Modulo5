@@ -15,10 +15,10 @@ COPY ["src/building-blocks/AcademyIO.MessageBus/AcademyIO.MessageBus.csproj", "s
 COPY ["src/building-blocks/AcademyIO.WebAPI.Core/AcademyIO.WebAPI.Core.csproj", "src/building-blocks/AcademyIO.WebAPI.Core/"]
 
 # Restore dependencies for the entire solution
-RUN dotnet restore "AcademyIO.sln"
+RUN dotnet restore "AcademyIO.sln" -v n
 
 # Copy the rest of the source code. .dockerignore will handle exclusions.
-COPY . .
+COPY ["src/", "src/"]
 
 # Publish the application.
 WORKDIR "/src/src/services/AcademyIO.Payments.API"
