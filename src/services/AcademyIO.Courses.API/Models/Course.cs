@@ -6,6 +6,7 @@ namespace AcademyIO.Courses.API.Models
     {
         public Course() : base()
         {
+            _lessons = new List<Lesson>();
         }
 
         public string Name { get; set; }
@@ -17,13 +18,19 @@ namespace AcademyIO.Courses.API.Models
 
         public void AddLesson(Lesson lesson)
         {
-            //TO DO validate if exists and add lesson throw exception
+            if (lesson == null)
+                throw new ArgumentNullException(nameof(lesson));
+
+            if (LessonExists(lesson))
+                throw new InvalidOperationException($"Lesson '{lesson.Name}' already exists in this course");
+
+            lesson.CourseId = this.Id;
+            _lessons.Add(lesson);
         }
 
-        private bool LessonExistis(Lesson lesson)
+        private bool LessonExists(Lesson lesson)
         {
-            //TO DO validate if exists
-            return false;
+            return _lessons.Any(l => l.Name == lesson.Name && !l.Deleted);
         }
     }
 }
