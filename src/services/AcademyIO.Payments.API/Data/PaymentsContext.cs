@@ -65,22 +65,17 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .IsRequired()
             .HasColumnType("varchar(250)");
 
-        builder.Property(c => c.EncryptedCardNumber)
+        builder.Property(c => c.CardNumber)
             .IsRequired()
-            .HasColumnType("text");
+            .HasColumnType("varchar(50)");
 
-        builder.Property(c => c.EncryptedCardExpirationDate)
+        builder.Property(c => c.CardExpirationDate)
             .IsRequired()
-            .HasColumnType("text");
+            .HasColumnType("varchar(10)");
 
-        builder.Property(c => c.EncryptedCardCVV)
-            .IsRequired()
-            .HasColumnType("text");
-
-        builder.Property(c => c.CardNumberLast4)
+        builder.Property(c => c.CardCVV)
             .IsRequired()
             .HasColumnType("varchar(4)");
-
         // 1 : 1
         builder.HasOne(c => c.Transaction)
             .WithOne(c => c.Payment);

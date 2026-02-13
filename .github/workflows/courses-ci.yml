@@ -6,15 +6,13 @@ on:
     paths:
       - "src/services/AcademyIO.Courses.API/**"
       - "src/building-blocks/**"
-      - "tests/AcademyIO.Courses.API.Tests/**"
-      - ".github/workflows/courses-ci.yml"
+      - "src/.github/workflows/courses-ci.yml"
   pull_request:
     branches: ["main"]
     paths:
       - "src/services/AcademyIO.Courses.API/**"
       - "src/building-blocks/**"
-      - "tests/AcademyIO.Courses.API.Tests/**"
-      - ".github/workflows/courses-ci.yml"
+      - "src/.github/workflows/courses-ci.yml"
 
 jobs:
   build:
@@ -35,15 +33,6 @@ jobs:
 
       - name: Lint Check
         run: dotnet format --verify-no-changes
-
-      - name: Test with Coverage
-        run: dotnet test --no-build --verbosity normal --logger "console;verbosity=normal" --collect:"XPlat Code Coverage" AcademyIO.sln
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/*.cobertura.xml
-          fail_ci_if_error: false
 
       - name: Test
         run: dotnet test --no-build --verbosity normal AcademyIO.sln

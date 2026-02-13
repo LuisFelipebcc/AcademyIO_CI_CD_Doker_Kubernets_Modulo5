@@ -73,22 +73,6 @@ namespace AcademyIO.Auth.API.Controllers
             return CustomResponse(token);
         }
 
-        /// <summary>
-        /// Alternative registration endpoint (REST convention).
-        /// Alias for /api/auth/new-account with same functionality.
-        /// </summary>
-        /// <param name="registerUser">Registration data including email, name, date of birth, role and password.</param>
-        /// <returns>
-        /// An <see cref="ActionResult"/> containing a <see cref="LoginResponseViewModel"/> with the generated JWT on success,
-        /// or a validation/error response when registration fails.
-        /// </returns>
-        [HttpPost("register")]
-        public async Task<ActionResult> RegisterUserAsync(RegisterUserViewModel registerUser)
-        {
-            return await Register(registerUser);
-        }
-
-
 
         private async Task<IdentityResult> RegisterUserIdentity(RegisterUserViewModel registerUser, IdentityUser<Guid> user)
         {

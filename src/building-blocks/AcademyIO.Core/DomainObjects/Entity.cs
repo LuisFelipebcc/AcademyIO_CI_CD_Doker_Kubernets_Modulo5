@@ -1,5 +1,4 @@
-﻿#nullable enable
-using AcademyIO.Core.Messages;
+﻿using AcademyIO.Core.Messages;
 
 namespace AcademyIO.Core.DomainObjects
 {
@@ -13,7 +12,7 @@ namespace AcademyIO.Core.DomainObjects
 
         public bool Deleted { get; set; }
 
-        private List<Event>? _notifications;
+        private List<Event> _notifications;
 
         public IReadOnlyCollection<Event>? Notifications => _notifications?.AsReadOnly();
 

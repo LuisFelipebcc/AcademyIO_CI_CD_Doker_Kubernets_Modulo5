@@ -59,16 +59,11 @@ public static class ApiCoreConfig
             app.UseSwaggerUi();
             app.UseReDoc(options => { options.Path = "/redoc"; });
         }
-        else
-        {
-            // In production, enforce HSTS (HTTP Strict Transport Security)
-            app.UseHsts();
-        }
 
         // Under certain scenarios, e.g. minikube / linux environment / behind load balancer
         // https redirection could lead devs to overcomplicate configuration for testing purposes
         // In production is a good practice to keep it true
-        if (app.Configuration["USE_HTTPS_REDIRECTION"] == "true" || !env.IsDevelopment())
+        if (app.Configuration["USE_HTTPS_REDIRECTION"] == "true")
             app.UseHttpsRedirection();
 
         app.UseRouting();
