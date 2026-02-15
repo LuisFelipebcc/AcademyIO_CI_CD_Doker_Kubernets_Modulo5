@@ -15,89 +15,10 @@ on:
       - ".github/workflows/students-ci.yml"
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: Restore dependencies
-        run: dotnet restore AcademyIO.sln
-
-      - name: Build
-        run: dotnet build --no-restore -c Release AcademyIO.sln
-
-      - name: Lint Check
-        run: dotnet format --verify-no-changes
-
-      - name: Test (with coverage)
-        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings AcademyIO.sln
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-students
-          path: "**/TestResults/**/coverage.cobertura.xml"
-
-      - name: Check project coverage threshold (80%)
-        shell: bash
-        run: |
-          file=$(find . -type f -path "*/TestResults/*/coverage.cobertura.xml" -print -quit)
-          if [ -z "$file" ]; then echo "Coverage file not found"; exit 1; fi
-          python3 - "$file" "src/services/AcademyIO.Students.API/" <<'PY'
-          import sys,xml.etree.ElementTree as ET
-          file=sys.argv[1]
-          proj=sys.argv[2].replace('/', '\\')
-          tree=ET.parse(file)
-          root=tree.getroot()
-          lines_covered=0
-          lines_valid=0
-          for pkg in root.findall('.//class'):
-            fn=pkg.get('filename')
-            if fn and proj in fn:
-              for line in pkg.findall('.//line'):
-                lines_valid+=1
-                if int(line.get('hits', '0'))>0:
-                  lines_covered+=1
-          if lines_valid==0:
-            print('No instrumented lines for project', proj); sys.exit(1)
-          rate=lines_covered/lines_valid
-          print(f'Project coverage: {rate*100:.2f}% (covered {lines_covered}/{lines_valid})')
-          if rate < 0.80:
-            print('Coverage below threshold (80%)')
-            sys.exit(1)
-          PY
-
-  build-and-push-docker-image:
-    needs: build
-    if: github.ref == 'refs/heads/main' && success()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check Docker secrets
-        run: |
-          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-            echo "Missing DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secrets"; exit 1;
-          fi
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./src/services/AcademyIO.Students.API/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-students-api:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/academyio-students-api:latest
+  ci:
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "src/services/AcademyIO.Students.API/"
+      dockerfile_path: "./src/services/AcademyIO.Students.API/Dockerfile"
+      docker_image_name: "academyio-students-api"
+    secrets: inherit
