@@ -50,31 +50,32 @@ jobs:
         run: |
           file=$(find . -type f -path "*/TestResults/*/coverage.cobertura.xml" -print -quit)
           if [ -z "$file" ]; then echo "Coverage file not found"; exit 1; fi
-            printf '%s\n' \
-            'import sys,xml.etree.ElementTree as ET' \
-            'file=sys.argv[1]' \
-            'proj=sys.argv[2].replace('/', "\\")' \
-            'tree=ET.parse(file)' \
-            'root=tree.getroot()' \
-            'lines_covered=0' \
-            'lines_valid=0' \
-            'for pkg in root.findall(".//class"):' \
-            '    fn=pkg.get("filename")' \
-            '    if fn and proj in fn:' \
-            '        for line in pkg.findall(".//line"):' \
-            '            lines_valid+=1' \
-            '            if int(line.get("hits", "0"))>0:' \
-            '                lines_covered+=1' \
-            'if lines_valid==0:' \
-            '    print("No instrumented lines for project", proj); sys.exit(0)' \
-            'rate=lines_covered/lines_valid' \
-            'print(f"Project coverage: {rate*100:.2f}% (covered {lines_covered}/{lines_valid})")' \
-            'if rate < 0.80:' \
-            '    print("Coverage below threshold (80%)")' \
-            '    sys.exit(1)' \
-            > /tmp/coverage_check.py
-            python3 /tmp/coverage_check.py "$file" "${{ inputs.project_name }}"
-            rm /tmp/coverage_check.py
+          # Create temporary python script safely (no heredoc indentation issues)
+          printf '%s\n' \
+            "import sys,xml.etree.ElementTree as ET" \
+            "file=sys.argv[1]" \
+            "proj=sys.argv[2].replace('/', '\\\\')" \
+            "tree=ET.parse(file)" \
+            "root=tree.getroot()" \
+            "lines_covered=0" \
+            "lines_valid=0" \
+            "for pkg in root.findall(\".//class\"):" \
+            "    fn=pkg.get(\"filename\")" \
+            "    if fn and proj in fn:" \
+            "        for line in pkg.findall(\".//line\"):" \
+            "            lines_valid+=1" \
+            "            if int(line.get(\"hits\", \"0\"))>0:" \
+            "                lines_covered+=1" \
+            "if lines_valid==0:" \
+            "    print('No instrumented lines for project', proj); sys.exit(0)" \
+            "rate=lines_covered/lines_valid" \
+            "print(f\"Project coverage: {rate*100:.2f}% (covered {lines_covered}/{lines_valid})\")" \
+            "if rate < 0.80:" \
+            "    print(\"Coverage below threshold (80%)\")" \
+            "    sys.exit(1)" \
+          > /tmp/coverage_check.py
+          python3 /tmp/coverage_check.py "$file" "${{ inputs.project_name }}"
+          rm /tmp/coverage_check.py
 
   build-and-push-docker-image:
     needs: build
