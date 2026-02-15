@@ -13,8 +13,10 @@ using static AcademyIO.Auth.API.Models.UserViewModel;
 
 namespace AcademyIO.Auth.API.Controllers
 {
+    /// <summary>
+    /// Controller responsável por endpoints de autenticação (registro e login).
+    /// </summary>
     [Route("api/auth")]
-
     public class AuthController : MainController
     {
         private readonly IMessageBus _bus;
@@ -22,6 +24,13 @@ namespace AcademyIO.Auth.API.Controllers
         private readonly SignInManager<IdentityUser<Guid>> _signInManager;
         private readonly UserManager<IdentityUser<Guid>> _userManager;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuthController"/> class.
+        /// </summary>
+        /// <param name="jwtSettings">JWT configuration settings.</param>
+        /// <param name="signInManager">ASP.NET Core SignInManager for user sign-in.</param>
+        /// <param name="userManager">ASP.NET Core UserManager for user management.</param>
+        /// <param name="bus">Message bus for publishing integration events.</param>
         public AuthController(
             JwtSettings jwtSettings,
             SignInManager<IdentityUser<Guid>> signInManager,
@@ -88,6 +97,11 @@ namespace AcademyIO.Auth.API.Controllers
             return result;
         }
 
+        /// <summary>
+        /// Authenticates a user using email and password and returns a JWT on success.
+        /// </summary>
+        /// <param name="userLogin">Login credentials (email and password).</param>
+        /// <returns>A <see cref="LoginResponseViewModel"/> with token information on success.</returns>
         [HttpPost("auth")]
         public async Task<ActionResult<LoginResponseViewModel>> Login(LoginUserViewModel userLogin)
         {
