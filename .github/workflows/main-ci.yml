@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   create-pr:
+    needs:
+      [build-auth, build-courses, build-students, build-payments, build-bff]
     if: |
       github.event_name == 'push' && 
       (startsWith(github.ref, 'refs/heads/feature/') || 
