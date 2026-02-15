@@ -6,13 +6,13 @@ on:
     paths:
       - "src/services/AcademyIO.Courses.API/**"
       - "src/building-blocks/**"
-      - "src/.github/workflows/courses-ci.yml"
+      - ".github/workflows/courses-ci.yml"
   pull_request:
     branches: ["main"]
     paths:
       - "src/services/AcademyIO.Courses.API/**"
       - "src/building-blocks/**"
-      - "src/.github/workflows/courses-ci.yml"
+      - ".github/workflows/courses-ci.yml"
 
 jobs:
   build:
@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-courses
-          path: '**/TestResults/**/coverage.cobertura.xml'
+          path: "**/TestResults/**/coverage.cobertura.xml"
 
       - name: Check project coverage threshold (80%)
         shell: bash

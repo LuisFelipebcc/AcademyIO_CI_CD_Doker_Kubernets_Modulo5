@@ -6,13 +6,13 @@ on:
     paths:
       - "src/api-gateways/AcademyIO.Bff/**"
       - "src/building-blocks/**"
-      - "src/.github/workflows/bff-ci.yml"
+      - ".github/workflows/bff-ci.yml"
   pull_request:
     branches: ["main"]
     paths:
       - "src/api-gateways/AcademyIO.Bff/**"
       - "src/building-blocks/**"
-      - "src/.github/workflows/bff-ci.yml"
+      - ".github/workflows/bff-ci.yml"
 
 jobs:
   build:
