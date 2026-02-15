@@ -13,6 +13,7 @@ COPY ["src/api-gateways/AcademyIO.Bff/AcademyIO.Bff.csproj", "src/api-gateways/A
 COPY ["src/building-blocks/AcademyIO.Core/AcademyIO.Core.csproj", "src/building-blocks/AcademyIO.Core/"]
 COPY ["src/building-blocks/AcademyIO.MessageBus/AcademyIO.MessageBus.csproj", "src/building-blocks/AcademyIO.MessageBus/"]
 COPY ["src/building-blocks/AcademyIO.WebAPI.Core/AcademyIO.WebAPI.Core.csproj", "src/building-blocks/AcademyIO.WebAPI.Core/"]
+COPY ["tests/AcademyIO.Tests/AcademyIO.Tests.csproj", "tests/AcademyIO.Tests/"]
 
 # Restore dependencies for the entire solution
 RUN dotnet restore "AcademyIO.sln"
