@@ -31,13 +31,13 @@ jobs:
         run: dotnet restore AcademyIO.sln
 
       - name: Build
-        run: dotnet build --no-restore -c Release AcademyIO.sln
+        run: dotnet build --no-restore -c Debug AcademyIO.sln
 
       - name: Lint Check
         run: dotnet format --verify-no-changes
 
       - name: Test (with coverage)
-        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings AcademyIO.sln
+        run: dotnet test --no-build -c Debug --verbosity normal --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings AcademyIO.sln
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
