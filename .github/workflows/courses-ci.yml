@@ -34,8 +34,36 @@ jobs:
       - name: Lint Check
         run: dotnet format --verify-no-changes
 
-      - name: Test
-        run: dotnet test --no-build --verbosity normal AcademyIO.sln
+      - name: Test (with coverage)
+        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" AcademyIO.sln
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-courses
+          path: '**/TestResults/**/coverage.cobertura.xml'
+
+      - name: Check coverage threshold (80%)
+        shell: bash
+        run: |
+          file=$(find . -type f -path "*/TestResults/*/coverage.cobertura.xml" -print -quit)
+          if [ -z "$file" ]; then echo "Coverage file not found"; exit 1; fi
+          python3 - "$file" <<'PY'
+import sys,xml.etree.ElementTree as ET
+file=sys.argv[1]
+tree=ET.parse(file)
+root=tree.getroot()
+rate=root.get('line-rate')
+if rate is None:
+    print('line-rate attribute not found in cobertura file')
+    sys.exit(1)
+rate=float(rate)
+percent=rate*100
+print(f"Coverage: {percent:.2f}%")
+if rate < 0.80:
+    print('Coverage below threshold (80%)')
+    sys.exit(1)
+PY
 
   build-and-push-docker-image:
     needs: build

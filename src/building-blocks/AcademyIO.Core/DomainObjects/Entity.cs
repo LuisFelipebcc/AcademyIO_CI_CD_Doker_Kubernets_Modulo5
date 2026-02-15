@@ -1,4 +1,6 @@
-﻿using AcademyIO.Core.Messages;
+﻿using System;
+using System.Collections.Generic;
+using AcademyIO.Core.Messages;
 
 namespace AcademyIO.Core.DomainObjects
 {
@@ -14,7 +16,7 @@ namespace AcademyIO.Core.DomainObjects
 
         private List<Event> _notifications;
 
-        public IReadOnlyCollection<Event>? Notifications => _notifications?.AsReadOnly();
+        public IReadOnlyCollection<Event> Notifications => _notifications == null ? Array.Empty<Event>() : _notifications.AsReadOnly();
 
         protected Entity()
         {
@@ -28,7 +30,7 @@ namespace AcademyIO.Core.DomainObjects
 
         public void AddEvent(Event e)
         {
-            _notifications ??= [];
+            _notifications ??= new List<Event>();
             _notifications.Add(e);
         }
 
