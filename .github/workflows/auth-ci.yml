@@ -1,18 +1,20 @@
 name: Auth API CI
 
 on:
-  push:
-    branches: ["**"] # Dispara em qualquer branch
-    paths:
-      - "src/services/AcademyIO.Auth.API/**"
-      - "src/building-blocks/**"
-      - ".github/workflows/auth-ci.yml"
-  pull_request:
-    branches: ["main"]
-    paths:
-      - "src/services/AcademyIO.Auth.API/**"
-      - "src/building-blocks/**"
-      - ".github/workflows/auth-ci.yml"
+  workflow_call:
+    inputs:
+      project_name:
+        description: "Project name"
+        required: true
+        type: string
+      dockerfile_path:
+        description: "Path to Dockerfile"
+        required: true
+        type: string
+      docker_image_name:
+        description: "Docker image name"
+        required: true
+        type: string
 
 jobs:
   ci:
