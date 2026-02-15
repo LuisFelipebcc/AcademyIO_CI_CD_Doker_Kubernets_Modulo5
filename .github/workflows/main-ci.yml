@@ -15,6 +15,7 @@ jobs:
     needs:
       [build-auth, build-courses, build-students, build-payments, build-bff]
     if: |
+      success() &&
       github.event_name == 'push' && 
       (startsWith(github.ref, 'refs/heads/feature/') || 
        startsWith(github.ref, 'refs/heads/fix/') || 
