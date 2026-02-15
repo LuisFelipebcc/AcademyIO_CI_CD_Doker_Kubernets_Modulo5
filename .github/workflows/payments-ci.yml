@@ -2,7 +2,7 @@ name: Payments API CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"] # Dispara em qualquer branch
     paths:
       - "src/services/AcademyIO.Payments.API/**"
       - "src/building-blocks/**"

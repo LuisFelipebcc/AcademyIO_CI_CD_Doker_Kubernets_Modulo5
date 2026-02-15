@@ -2,7 +2,7 @@ name: BFF CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"] # Dispara em qualquer branch
     paths:
       - "src/api-gateways/AcademyIO.Bff/**"
       - "src/building-blocks/**"

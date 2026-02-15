@@ -2,7 +2,7 @@ name: Auth API CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"] # Dispara em qualquer branch
     paths:
       - "src/services/AcademyIO.Auth.API/**"
       - "src/building-blocks/**"

@@ -2,7 +2,7 @@ name: Courses API CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["**"] # Dispara em qualquer branch
     paths:
       - "src/services/AcademyIO.Courses.API/**"
       - "src/building-blocks/**"
