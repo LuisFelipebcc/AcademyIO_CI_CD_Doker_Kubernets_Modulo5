@@ -50,7 +50,7 @@ jobs:
         run: |
           file=$(find . -type f -path "*/TestResults/*/coverage.cobertura.xml" -print -quit)
           if [ -z "$file" ]; then echo "Coverage file not found"; exit 1; fi
-          python3 - "$file" "${{ inputs.project_name }}" <<'PY'
+          python3 - "$file" "${{ inputs.project_name }}" <<'EOF'
             import sys,xml.etree.ElementTree as ET
             file=sys.argv[1]
             proj=sys.argv[2].replace('/', '\\')
@@ -72,7 +72,7 @@ jobs:
             if rate < 0.80:
                 print('Coverage below threshold (80%)')
                 sys.exit(1)
-            PY
+            EOF
 
   build-and-push-docker-image:
     needs: build
