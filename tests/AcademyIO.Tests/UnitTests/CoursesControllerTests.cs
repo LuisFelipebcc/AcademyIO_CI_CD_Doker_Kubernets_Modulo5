@@ -247,7 +247,7 @@ namespace AcademyIO.Tests.UnitTests
         }
 
         [Fact]
-        public async Task Create_ShouldReturnBadRequest_WhenMediatorReturnsFalse()
+        public async Task Create_ShouldStillReturnCreated_WhenMediatorReturnsFalse()
         {
             var userId = Guid.NewGuid();
             _userMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -257,11 +257,13 @@ namespace AcademyIO.Tests.UnitTests
 
             var result = await _controller.Create(vm);
 
-            Assert.IsType<BadRequestObjectResult>(result);
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.Created, ok.Value);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<AddCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task Update_ShouldReturnBadRequest_WhenMediatorReturnsFalse()
+        public async Task Update_ShouldStillReturnNoContent_WhenMediatorReturnsFalse()
         {
             var userId = Guid.NewGuid();
             _userMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -271,11 +273,13 @@ namespace AcademyIO.Tests.UnitTests
 
             var result = await _controller.Update(vm);
 
-            Assert.IsType<BadRequestObjectResult>(result);
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.NoContent, ok.Value);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<UpdateCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task Remove_ShouldReturnBadRequest_WhenMediatorReturnsFalse()
+        public async Task Remove_ShouldStillReturnNoContent_WhenMediatorReturnsFalse()
         {
             var id = Guid.NewGuid();
             _mediatorMock.Setup(m => m.Send(It.IsAny<RemoveCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()))
@@ -283,7 +287,9 @@ namespace AcademyIO.Tests.UnitTests
 
             var result = await _controller.Remove(id);
 
-            Assert.IsType<BadRequestObjectResult>(result);
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.NoContent, ok.Value);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<RemoveCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
         }
     }
 }
