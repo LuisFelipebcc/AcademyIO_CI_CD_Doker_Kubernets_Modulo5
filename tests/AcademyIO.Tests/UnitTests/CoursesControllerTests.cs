@@ -14,6 +14,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentValidation.Results;
 using Xunit;
+using System.Net;
+using System.Reflection;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AcademyIO.Tests.UnitTests
 {
@@ -85,6 +88,98 @@ namespace AcademyIO.Tests.UnitTests
 
             Assert.Same(response, result);
             _busMock.Verify(b => b.RequestAsync<PaymentRegisteredIntegrationEvent, ResponseMessage>(It.IsAny<PaymentRegisteredIntegrationEvent>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_ShouldReturnOk_WhenCourseExists()
+        {
+            var id = Guid.NewGuid();
+            var vm = new CourseViewModel { Id = id, Name = "Course" };
+            _courseQueryMock.Setup(q => q.GetById(id)).ReturnsAsync(vm);
+
+            var result = await _controller.GetById(id);
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Same(vm, ok.Value);
+            _courseQueryMock.Verify(q => q.GetById(id), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_ShouldReturnOk_WithNull_WhenCourseNotFound()
+        {
+            var id = Guid.NewGuid();
+            _courseQueryMock.Setup(q => q.GetById(id)).ReturnsAsync((CourseViewModel)null);
+
+            var result = await _controller.GetById(id);
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Null(ok.Value);
+            _courseQueryMock.Verify(q => q.GetById(id), Times.Once);
+        }
+
+        [Fact]
+        public async Task Create_ShouldMapAllFields_AndReturnCreated()
+        {
+            var userId = Guid.NewGuid();
+            _userMock.Setup(u => u.GetUserId()).Returns(userId);
+            var vm = new CourseViewModel { Name = "N", Description = "D", Price = 123.45 };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<AddCourseCommand>(), default)).ReturnsAsync(true);
+
+            var result = await _controller.Create(vm);
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.Created, ok.Value);
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<AddCourseCommand>(c => c.Name == vm.Name && c.Description == vm.Description && c.Price == vm.Price && c.InstructorId == userId),
+                It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Update_ShouldMapAllFields_AndReturnNoContent()
+        {
+            var userId = Guid.NewGuid();
+            _userMock.Setup(u => u.GetUserId()).Returns(userId);
+            var vm = new CourseViewModel { Id = Guid.NewGuid(), Name = "N2", Description = "D2", Price = 88 };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateCourseCommand>(), default)).ReturnsAsync(true);
+
+            var result = await _controller.Update(vm);
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.NoContent, ok.Value);
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<UpdateCourseCommand>(c => c.Name == vm.Name && c.Description == vm.Description && c.Price == vm.Price && c.CourseId == vm.Id && c.InstructorId == userId),
+                It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public void AuthorizationAttributes_ShouldBeConfiguredCorrectly_ForCourses()
+        {
+            var t = typeof(CoursesController);
+            var getAll = t.GetMethod("GetAll");
+            var getById = t.GetMethod("GetById");
+            var create = t.GetMethod("Create");
+            var update = t.GetMethod("Update");
+            var remove = t.GetMethod("Remove");
+            var makePayment = t.GetMethod("MakePayment");
+
+            Assert.NotNull(getAll.GetCustomAttribute<AllowAnonymousAttribute>());
+            Assert.NotNull(getById.GetCustomAttribute<AllowAnonymousAttribute>());
+
+            var createAuth = create.GetCustomAttribute<AuthorizeAttribute>();
+            Assert.NotNull(createAuth);
+            Assert.Equal("ADMIN", createAuth.Roles);
+
+            var updateAuth = update.GetCustomAttribute<AuthorizeAttribute>();
+            Assert.NotNull(updateAuth);
+            Assert.Equal("ADMIN", updateAuth.Roles);
+
+            var removeAuth = remove.GetCustomAttribute<AuthorizeAttribute>();
+            Assert.NotNull(removeAuth);
+            Assert.Equal("ADMIN", removeAuth.Roles);
+
+            var payAuth = makePayment.GetCustomAttribute<AuthorizeAttribute>();
+            Assert.NotNull(payAuth);
+            Assert.Equal("STUDENT", payAuth.Roles);
         }
     }
 }

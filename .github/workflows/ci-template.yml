@@ -54,7 +54,7 @@ jobs:
           printf '%s\n' \
             "import sys,xml.etree.ElementTree as ET" \
             "file=sys.argv[1]" \
-            "proj=sys.argv[2].replace('/', '\\\\')" \
+            "proj=sys.argv[2]" \
             "tree=ET.parse(file)" \
             "root=tree.getroot()" \
             "lines_covered=0" \
