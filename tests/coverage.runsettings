@@ -5,7 +5,7 @@
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
           <Format>cobertura</Format>
-          <ExcludeByFile>**/Data/**;**/Configuration/**;**/Controllers/**;**/Migrations/**;**/*.Designer.cs;**/*Program.cs;**/Properties/**;**/DatabaseFlavor/**;**/MessageBus/**;**/Utils/**</ExcludeByFile>
+          <ExcludeByFile>**/Migrations/**;**/*.Designer.cs;**/*Program.cs;**/Properties/**;**/DatabaseFlavor/**;**/MessageBus/**;**/Utils/**</ExcludeByFile>
         </Configuration>
       </DataCollector>
     </DataCollectors>
