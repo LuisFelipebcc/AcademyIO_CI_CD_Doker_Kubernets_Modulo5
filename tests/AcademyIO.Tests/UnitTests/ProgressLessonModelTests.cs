@@ -1,5 +1,5 @@
-using AcademyIO.Courses.API.Models;
 using AcademyIO.Core.Enums;
+using AcademyIO.Courses.API.Models;
 using System;
 using Xunit;
 

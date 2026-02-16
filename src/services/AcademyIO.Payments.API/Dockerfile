@@ -4,10 +4,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copia apenas os arquivos de projeto necessários (melhora cache)
+# Copia apenas os arquivos de projeto necessários (Payments.API + suas dependências)
+# Decoupled from Courses, Auth, Students, Bff e Tests
 COPY ["src/services/AcademyIO.Payments.API/AcademyIO.Payments.API.csproj", "src/services/AcademyIO.Payments.API/"]
 COPY ["src/building-blocks/AcademyIO.Core/AcademyIO.Core.csproj", "src/building-blocks/AcademyIO.Core/"]
-COPY ["src/building-blocks/AcademyIO.MessageBus/AcademyIO.MessageBus.csproj", "src/building-blocks/AcademyIO.MessageBus/"]
 COPY ["src/building-blocks/AcademyIO.WebAPI.Core/AcademyIO.WebAPI.Core.csproj", "src/building-blocks/AcademyIO.WebAPI.Core/"]
 
 # Restore apenas do projeto do serviço

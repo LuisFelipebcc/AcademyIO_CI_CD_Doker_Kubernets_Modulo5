@@ -1,3 +1,4 @@
+using AcademyIO.MessageBus;
 using AcademyIO.Payments.API.Configuration;
 using AcademyIO.Payments.API.Data;
 using AcademyIO.WebAPI.Core.Configuration;
@@ -12,6 +13,7 @@ builder.Services.AddJwtConfiguration(builder.Configuration);
 builder.Services.AddContext(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddServices();
+builder.Services.AddMessageBus(builder.Configuration.GetConnectionString("MessageBus"));
 
 builder.Services.AddHealthChecks()
     .AddCheck("live", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: new[] { "live" })
@@ -20,7 +22,6 @@ builder.Services.AddHealthChecks()
 builder.Services.AddSwaggerConfiguration();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 

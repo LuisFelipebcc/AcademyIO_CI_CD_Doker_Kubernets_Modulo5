@@ -1,9 +1,7 @@
-﻿using AcademyIO.Core.Messages.Integration;
-using AcademyIO.Courses.API.Application.Commands;
+﻿using AcademyIO.Courses.API.Application.Commands;
 using AcademyIO.Courses.API.Application.Queries;
 using AcademyIO.Courses.API.Application.Queries.ViewModels;
 using AcademyIO.Courses.API.Models.ViewModels;
-using AcademyIO.MessageBus;
 using AcademyIO.WebAPI.Core.Controllers;
 using AcademyIO.WebAPI.Core.User;
 using MediatR;
@@ -17,8 +15,7 @@ namespace AcademyIO.Courses.API.Controllers
     [ApiController]
     public class CoursesController(IMediator _mediator,
                                 ICourseQuery courseQuery,
-                                IAspNetUser aspNetUser,
-                                IMessageBus _bus) : MainController
+                                IAspNetUser aspNetUser) : MainController
     {
         /// <summary>
         /// Retorna todos os cursos registrados
@@ -99,29 +96,6 @@ namespace AcademyIO.Courses.API.Controllers
             await _mediator.Send(command);
 
             return CustomResponse(HttpStatusCode.NoContent);
-        }
-
-        /// <summary>
-        /// Faz o pagamento do curso referenciado nos parametro 
-        /// </summary>
-        /// <param name="courseId"></param>
-        /// <param name="paymentViewModel"></param>
-        /// <returns>Retorna que o pagamento foi feito, status 201</returns>
-        [Authorize(Roles = "STUDENT")]
-        [HttpPost("{courseId:guid}/make-payment")]
-        public async Task<ResponseMessage> MakePayment(Guid courseId, [FromBody] PaymentViewModel paymentViewModel)
-        {
-            var paymentRegistered = new PaymentRegisteredIntegrationEvent(courseId, aspNetUser.GetUserId(), paymentViewModel.CardName,
-                                                        paymentViewModel.CardNumber, paymentViewModel.CardExpirationDate,
-                                                        paymentViewModel.CardCVV);
-            try
-            {
-                return await _bus.RequestAsync<PaymentRegisteredIntegrationEvent, ResponseMessage>(paymentRegistered);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
         }
     }
 }

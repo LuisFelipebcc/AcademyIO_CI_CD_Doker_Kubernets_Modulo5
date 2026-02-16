@@ -1,4 +1,3 @@
-using AcademyIO.Courses.API.Application.Commands;
 using AcademyIO.Courses.API.Application.Queries.ViewModels;
 using AcademyIO.Courses.API.Models.ViewModels;
 using System;

@@ -1,7 +1,7 @@
+using AcademyIO.Core.Enums;
 using AcademyIO.Courses.API.Data;
 using AcademyIO.Courses.API.Data.Repository;
 using AcademyIO.Courses.API.Models;
-using AcademyIO.Core.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Moq;
