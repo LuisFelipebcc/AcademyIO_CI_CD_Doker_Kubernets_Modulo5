@@ -13,6 +13,7 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
+  packages: write
 
 jobs:
   # Detecta quais serviços mudaram
