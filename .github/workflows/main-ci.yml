@@ -6,55 +6,45 @@ on:
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
-  create-pr:
-    needs:
-      [build-auth, build-courses, build-students, build-payments, build-bff]
-    if: |
-      success() &&
-      github.event_name == 'push' && 
-      (startsWith(github.ref, 'refs/heads/feature/') || 
-       startsWith(github.ref, 'refs/heads/fix/') || 
-       startsWith(github.ref, 'refs/heads/hotfix/'))
+  # Detecta quais serviços mudaram
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      courses: ${{ steps.filter.outputs.courses }}
+      students: ${{ steps.filter.outputs.students }}
+      payments: ${{ steps.filter.outputs.payments }}
+      bff: ${{ steps.filter.outputs.bff }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          fetch-depth: 0
-
-      - name: Install GitHub CLI
-        run: |
-          type -p gh >/dev/null || {
-            sudo apt-get update
-            sudo apt-get install -y gh
-          }
-
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ github.ref_name }}
-        run: |
-          existing_pr=$(gh pr list --head "$BRANCH" --base main --json number --jq .[0].number 2>/dev/null || echo "")
-          if [ -n "$existing_pr" ]; then
-            echo "PR already exists: #$existing_pr"
-            exit 0
-          fi
-          gh pr create \
-            --head "$BRANCH" \
-            --base main \
-            --title "$BRANCH: automated PR" \
-            --body "## Automated PR for branch: \`$BRANCH\`
-
-            This PR was created automatically by GitHub Actions.
-
-            When all CI checks pass ✅, this PR can be merged to main." || echo "PR creation skipped"
+          filters: |
+            auth:
+              - 'src/services/AcademyIO.Auth.API/**'
+            courses:
+              - 'src/services/AcademyIO.Courses.API/**'
+            students:
+              - 'src/services/AcademyIO.Students.API/**'
+            payments:
+              - 'src/services/AcademyIO.Payments.API/**'
+            bff:
+              - 'src/api-gateways/AcademyIO.Bff/**'
 
   build-auth:
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
       project_name: "AcademyIO.Auth.API"
@@ -63,6 +53,8 @@ jobs:
     secrets: inherit
 
   build-courses:
+    needs: changes
+    if: needs.changes.outputs.courses == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
       project_name: "AcademyIO.Courses.API"
@@ -71,6 +63,8 @@ jobs:
     secrets: inherit
 
   build-students:
+    needs: changes
+    if: needs.changes.outputs.students == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
       project_name: "AcademyIO.Students.API"
@@ -79,13 +73,50 @@ jobs:
     secrets: inherit
 
   build-payments:
-    uses: ./.github/workflows/payments-api-ci.yml
+    needs: changes
+    if: needs.changes.outputs.payments == 'true'
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "AcademyIO.Payments.API"
+      dockerfile_path: "./src/services/AcademyIO.Payments.API/Dockerfile"
+      docker_image_name: "academyio-payments-api"
     secrets: inherit
 
   build-bff:
+    needs: changes
+    if: needs.changes.outputs.bff == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
       project_name: "AcademyIO.Bff"
       dockerfile_path: "./src/api-gateways/AcademyIO.Bff/Dockerfile"
       docker_image_name: "academyio-bff"
     secrets: inherit
+
+  create-pr:
+    needs:
+      [build-auth, build-courses, build-students, build-payments, build-bff]
+    if: |
+      github.event_name == 'push' &&
+      (startsWith(github.ref, 'refs/heads/feature/') ||
+       startsWith(github.ref, 'refs/heads/fix/') ||
+       startsWith(github.ref, 'refs/heads/hotfix/'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Pull Request if not exists
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: ${{ github.ref_name }}
+          title: "${{ github.ref_name }}: automated PR"
+          body: |
+            ## Automated PR
+
+            This PR was created automatically by GitHub Actions.
+
+            When all CI checks pass ✅, it can be merged into main.
+          draft: false
