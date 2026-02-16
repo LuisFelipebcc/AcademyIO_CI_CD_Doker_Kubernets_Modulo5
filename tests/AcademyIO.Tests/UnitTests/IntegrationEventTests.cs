@@ -1,6 +1,6 @@
+using AcademyIO.Core.Messages.Integration;
 using System;
 using Xunit;
-using AcademyIO.Core.Messages.Integration;
 
 namespace AcademyIO.Tests.UnitTests
 {

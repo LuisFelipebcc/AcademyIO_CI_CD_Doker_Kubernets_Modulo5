@@ -1,13 +1,13 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using AcademyIO.Core.Data;
+using AcademyIO.Core.Messages.IntegrationCommands;
 using AcademyIO.Courses.API.Application.Commands;
 using AcademyIO.Courses.API.Application.Handlers;
 using AcademyIO.Courses.API.Models;
-using AcademyIO.Core.Data;
-using AcademyIO.Core.Messages.IntegrationCommands;
 using MediatR;
 using Moq;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AcademyIO.Tests.UnitTests

@@ -1,6 +1,6 @@
+using AcademyIO.Courses.API.Application.Commands;
 using System;
 using Xunit;
-using AcademyIO.Courses.API.Application.Commands;
 
 namespace AcademyIO.Tests.UnitTests
 {

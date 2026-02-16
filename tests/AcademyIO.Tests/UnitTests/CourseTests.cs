@@ -1,6 +1,6 @@
+using AcademyIO.Courses.API.Models;
 using System;
 using Xunit;
-using AcademyIO.Courses.API.Models;
 
 namespace AcademyIO.Tests.UnitTests
 {
