@@ -181,5 +181,69 @@ namespace AcademyIO.Tests.UnitTests
             Assert.NotNull(payAuth);
             Assert.Equal("STUDENT", payAuth.Roles);
         }
+
+        [Fact]
+        public async Task GetAll_ShouldReturnOk_WithEmptyList()
+        {
+            _courseQueryMock.Setup(q => q.GetAll()).ReturnsAsync(new List<CourseViewModel>());
+
+            var result = await _controller.GetAll();
+
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var list = Assert.IsAssignableFrom<IEnumerable<CourseViewModel>>(ok.Value);
+            Assert.Empty(list);
+            _courseQueryMock.Verify(q => q.GetAll(), Times.Once);
+        }
+
+        [Fact]
+        public async Task Remove_ShouldSendCommandWithCorrectId()
+        {
+            var id = Guid.NewGuid();
+            _mediatorMock.Setup(m => m.Send(It.IsAny<RemoveCourseCommand>(), default)).ReturnsAsync(true);
+
+            var result = await _controller.Remove(id);
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.NoContent, ok.Value);
+            _mediatorMock.Verify(m => m.Send(It.Is<RemoveCourseCommand>(c => c.CourseId == id), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Create_ShouldUseAuthenticatedUserId_Once()
+        {
+            var userId = Guid.NewGuid();
+            _userMock.Setup(u => u.GetUserId()).Returns(userId);
+            var vm = new CourseViewModel { Name = "N", Description = "D", Price = 10 };
+
+            await _controller.Create(vm);
+
+            _userMock.Verify(u => u.GetUserId(), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<AddCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Update_ShouldUseAuthenticatedUserId_Once()
+        {
+            var userId = Guid.NewGuid();
+            _userMock.Setup(u => u.GetUserId()).Returns(userId);
+            var vm = new CourseViewModel { Id = Guid.NewGuid(), Name = "N", Description = "D", Price = 10 };
+
+            await _controller.Update(vm);
+
+            _userMock.Verify(u => u.GetUserId(), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<UpdateCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task MakePayment_ShouldRethrow_WhenBusThrows()
+        {
+            var courseId = Guid.NewGuid();
+            var vm = new PaymentViewModel { CardName = "X", CardNumber = "4111111111111111", CardExpirationDate = "12/25", CardCVV = "123" };
+            _userMock.Setup(u => u.GetUserId()).Returns(Guid.NewGuid());
+            _busMock.Setup(b => b.RequestAsync<PaymentRegisteredIntegrationEvent, ResponseMessage>(It.IsAny<PaymentRegisteredIntegrationEvent>()))
+                .ThrowsAsync(new InvalidOperationException("bus error"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => _controller.MakePayment(courseId, vm));
+        }
     }
 }
