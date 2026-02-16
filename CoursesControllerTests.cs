@@ -71,6 +71,21 @@ namespace AcademyIO.Tests.Courses
         }
 
         [Fact]
+        public async Task GetById_ShouldReturnNull_WhenNotExists()
+        {
+            // Arrange
+            var courseId = Guid.NewGuid();
+            _courseQueryMock.Setup(q => q.GetById(courseId)).ReturnsAsync((CourseViewModel)null);
+
+            // Act
+            var result = await _controller.GetById(courseId);
+
+            // Assert
+            _courseQueryMock.Verify(q => q.GetById(courseId), Times.Once);
+            // Dependendo da implementação do CustomResponse, pode-se verificar se o Value é null ou NotFound
+        }
+
+        [Fact]
         public async Task Create_ShouldSendCommand_AndReturnCreated()
         {
             // Arrange

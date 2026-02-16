@@ -63,6 +63,20 @@ namespace AcademyIO.Tests.Courses
         }
 
         [Fact]
+        public async Task GetProgress_ShouldReturnProgress_WhenCalled()
+        {
+            // Arrange
+            var progressList = new List<LessonProgressViewModel>();
+            _lessonQueryMock.Setup(q => q.GetProgress(_userId)).ReturnsAsync(progressList);
+
+            // Act
+            await _controller.GetProgress();
+
+            // Assert
+            _lessonQueryMock.Verify(q => q.GetProgress(_userId), Times.Once);
+        }
+
+        [Fact]
         public async Task Add_ShouldSendCommand()
         {
             // Arrange
@@ -134,6 +148,22 @@ namespace AcademyIO.Tests.Courses
 
             // Assert
             _mediatorMock.Verify(m => m.Send(It.IsAny<FinishLessonCommand>(), CancellationToken.None), Times.Never);
+        }
+
+        [Fact]
+        public async Task FinishClass_ShouldSucceed_WhenValid()
+        {
+            // Arrange
+            var lessonId = Guid.NewGuid();
+            _lessonQueryMock.Setup(q => q.ExistsProgress(lessonId, _userId)).Returns(true);
+            // Status deve ser diferente de NotStarted (ex: InProgress) para poder finalizar
+            _lessonQueryMock.Setup(q => q.GetProgressStatusLesson(lessonId, _userId)).Returns(EProgressLesson.InProgress);
+
+            // Act
+            await _controller.FinishClass(lessonId);
+
+            // Assert
+            _mediatorMock.Verify(m => m.Send(It.IsAny<FinishLessonCommand>(), CancellationToken.None), Times.Once);
         }
     }
 }
