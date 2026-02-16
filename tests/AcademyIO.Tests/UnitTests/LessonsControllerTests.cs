@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AcademyIO.Tests.Courses.Controllers
+namespace AcademyIO.Tests.UnitTests
 {
     public class LessonsControllerTests
     {

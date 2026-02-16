@@ -2,7 +2,7 @@ using AcademyIO.Courses.API.Application.Commands;
 using System;
 using Xunit;
 
-namespace AcademyIO.Tests.Courses.Commands
+namespace AcademyIO.Tests.UnitTests
 {
     public class CourseCommandsTests
     {
