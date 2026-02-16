@@ -115,11 +115,11 @@ namespace AcademyIO.Tests.UnitTests
             var studentId = Guid.NewGuid();
 
             _lessonRepoMock.Setup(r => r.GetProgressStatusLesson(lessonId, studentId))
-                .Returns(EProgressLesson.Finished);
+                .Returns(EProgressLesson.Completed);
 
             var result = _query.GetProgressStatusLesson(lessonId, studentId);
 
-            Assert.Equal(EProgressLesson.Finished, result);
+            Assert.Equal(EProgressLesson.Completed, result);
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace AcademyIO.Tests.UnitTests
                 {
                     Id = Guid.NewGuid(),
                     Lesson = new Lesson("Lesson 2", "Subject 2", 15, Guid.NewGuid()) { Id = Guid.NewGuid() },
-                    ProgressionStatus = EProgressLesson.Finished
+                    ProgressionStatus = EProgressLesson.Completed
                 }
             };
 

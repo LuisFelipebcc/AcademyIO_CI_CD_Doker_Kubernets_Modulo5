@@ -75,7 +75,7 @@ namespace AcademyIO.Tests.UnitTests
         [Fact]
         public async Task Handle_AddLessonCommand_WithEmptyName_ReturnsFalse()
         {
-            var command = new AddLessonCommand("", "Valid Subject", 10, Guid.NewGuid());
+            var command = new AddLessonCommand("", "Valid Subject", Guid.NewGuid(), 10);
 
             var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -85,7 +85,7 @@ namespace AcademyIO.Tests.UnitTests
         [Fact]
         public async Task Handle_AddLessonCommand_WithEmptySubject_ReturnsFalse()
         {
-            var command = new AddLessonCommand("Valid Lesson", "", 10, Guid.NewGuid());
+            var command = new AddLessonCommand("Valid Lesson", "", Guid.NewGuid(), 10);
 
             var result = await _handler.Handle(command, CancellationToken.None);
 
