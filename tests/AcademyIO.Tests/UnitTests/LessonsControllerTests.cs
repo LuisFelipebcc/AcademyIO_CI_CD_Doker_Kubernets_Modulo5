@@ -8,6 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System;
+using System.Net;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -113,7 +114,8 @@ namespace AcademyIO.Tests.Courses.Controllers
             var result = await _controller.StartClass(lessonId);
 
             // Assert
-            Assert.IsType<NoContentResult>(result);
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.NoContent, ok.Value);
             _mediatorMock.Verify(m => m.Send(It.Is<StartLessonCommand>(c => c.LessonId == lessonId && c.StudentId == userId), It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -202,7 +204,8 @@ namespace AcademyIO.Tests.Courses.Controllers
             var result = await _controller.FinishClass(lessonId);
 
             // Assert
-            Assert.IsType<NoContentResult>(result);
+            var ok = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(HttpStatusCode.NoContent, ok.Value);
             _mediatorMock.Verify(m => m.Send(It.Is<FinishLessonCommand>(c => c.LessonId == lessonId && c.StudentId == userId), It.IsAny<CancellationToken>()), Times.Once);
         }
     }

@@ -60,7 +60,7 @@ namespace AcademyIO.Tests.Courses.Commands
             // Assert
             Assert.False(result);
             Assert.Contains(command.ValidationResult.Errors, e => e.PropertyName == "Name");
-            Assert.Contains(command.ValidationResult.Errors, e => e.PropertyName == "Id");
+            Assert.Contains(command.ValidationResult.Errors, e => e.PropertyName == "CourseId");
         }
     }
 }
