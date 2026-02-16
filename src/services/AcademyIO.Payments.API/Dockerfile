@@ -24,7 +24,7 @@ COPY ["src/", "src/"]
 # Publish the application.
 WORKDIR "/src/src/services/AcademyIO.Payments.API"
 # Ensure packages and project references are restored before publishing
-RUN dotnet publish "AcademyIO.Payments.API.csproj" -c Release -o /app/publish /p:UseAppHost=false -v minimal
+RUN dotnet publish "AcademyIO.Payments.API.csproj" -c Release -o /app/publish /p:UseAppHost=false --no-restore
 
 # Stage 2: Final - Creates the final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
