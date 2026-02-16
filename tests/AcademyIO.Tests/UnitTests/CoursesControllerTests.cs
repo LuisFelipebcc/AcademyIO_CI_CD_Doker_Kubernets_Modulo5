@@ -245,5 +245,45 @@ namespace AcademyIO.Tests.UnitTests
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => _controller.MakePayment(courseId, vm));
         }
+
+        [Fact]
+        public async Task Create_ShouldReturnBadRequest_WhenMediatorReturnsFalse()
+        {
+            var userId = Guid.NewGuid();
+            _userMock.Setup(u => u.GetUserId()).Returns(userId);
+            var vm = new CourseViewModel { Name = "X", Description = "Y", Price = 10 };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<AddCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _controller.Create(vm);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnBadRequest_WhenMediatorReturnsFalse()
+        {
+            var userId = Guid.NewGuid();
+            _userMock.Setup(u => u.GetUserId()).Returns(userId);
+            var vm = new CourseViewModel { Id = Guid.NewGuid(), Name = "X", Description = "Y", Price = 10 };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<UpdateCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _controller.Update(vm);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task Remove_ShouldReturnBadRequest_WhenMediatorReturnsFalse()
+        {
+            var id = Guid.NewGuid();
+            _mediatorMock.Setup(m => m.Send(It.IsAny<RemoveCourseCommand>(), It.IsAny<System.Threading.CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _controller.Remove(id);
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
     }
 }
