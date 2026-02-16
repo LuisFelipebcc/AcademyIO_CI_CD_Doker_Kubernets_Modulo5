@@ -9,6 +9,7 @@ WORKDIR /src
 COPY ["src/services/AcademyIO.Payments.API/AcademyIO.Payments.API.csproj", "src/services/AcademyIO.Payments.API/"]
 COPY ["src/building-blocks/AcademyIO.Core/AcademyIO.Core.csproj", "src/building-blocks/AcademyIO.Core/"]
 COPY ["src/building-blocks/AcademyIO.WebAPI.Core/AcademyIO.WebAPI.Core.csproj", "src/building-blocks/AcademyIO.WebAPI.Core/"]
+COPY ["src/building-blocks/AcademyIO.MessageBus/AcademyIO.MessageBus.csproj", "src/building-blocks/AcademyIO.MessageBus/"]
 
 # Restore apenas do projeto do serviço
 RUN dotnet restore "src/services/AcademyIO.Payments.API/AcademyIO.Payments.API.csproj"
