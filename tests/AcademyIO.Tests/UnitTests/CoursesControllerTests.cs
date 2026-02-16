@@ -130,7 +130,7 @@ namespace AcademyIO.Tests.UnitTests
             var ok = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(HttpStatusCode.Created, ok.Value);
             _mediatorMock.Verify(m => m.Send(
-                It.Is<AddCourseCommand>(c => c.Name == vm.Name && c.Description == vm.Description && c.Price == vm.Price && c.InstructorId == userId),
+                It.Is<AddCourseCommand>(c => c.Name == vm.Name && c.Description == vm.Description && c.Price == vm.Price && c.UserCreationId == userId),
                 It.IsAny<System.Threading.CancellationToken>()), Times.Once);
         }
 
@@ -147,7 +147,7 @@ namespace AcademyIO.Tests.UnitTests
             var ok = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(HttpStatusCode.NoContent, ok.Value);
             _mediatorMock.Verify(m => m.Send(
-                It.Is<UpdateCourseCommand>(c => c.Name == vm.Name && c.Description == vm.Description && c.Price == vm.Price && c.CourseId == vm.Id && c.InstructorId == userId),
+                It.Is<UpdateCourseCommand>(c => c.Name == vm.Name && c.Description == vm.Description && c.Price == vm.Price && c.CourseId == vm.Id && c.UserCreationId == userId),
                 It.IsAny<System.Threading.CancellationToken>()), Times.Once);
         }
 
