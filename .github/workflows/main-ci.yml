@@ -79,11 +79,7 @@ jobs:
     secrets: inherit
 
   build-payments:
-    uses: ./.github/workflows/ci-template.yml
-    with:
-      project_name: "AcademyIO.Payments.API"
-      dockerfile_path: "./src/services/AcademyIO.Payments.API/Dockerfile"
-      docker_image_name: "academyio-payments-api"
+    uses: ./.github/workflows/payments-api-ci.yml
     secrets: inherit
 
   build-bff:
