@@ -35,14 +35,19 @@ jobs:
           filters: |
             auth:
               - 'src/services/AcademyIO.Auth.API/**'
+              - 'src/building-blocks/**'
             courses:
               - 'src/services/AcademyIO.Courses.API/**'
+              - 'src/building-blocks/**'
             students:
               - 'src/services/AcademyIO.Students.API/**'
+              - 'src/building-blocks/**'
             payments:
               - 'src/services/AcademyIO.Payments.API/**'
+              - 'src/building-blocks/**'
             bff:
               - 'src/api-gateways/AcademyIO.Bff/**'
+              - 'src/building-blocks/**'
             tests:
               - 'tests/**'
               - 'src/building-blocks/**'
