@@ -97,6 +97,9 @@ jobs:
     needs:
       [build-auth, build-courses, build-students, build-payments, build-bff]
     if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
       github.event_name == 'push' &&
       (startsWith(github.ref, 'refs/heads/feature/') ||
        startsWith(github.ref, 'refs/heads/fix/') ||
@@ -107,17 +110,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create Pull Request if not exists
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
-          branch: ${{ github.ref_name }}
-          title: "${{ github.ref_name }}: automated PR"
-          body: |
-            ## Automated PR
-
-            This PR was created automatically by GitHub Actions.
-
-            When all CI checks pass ✅, it can be merged into main.
-          draft: false
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_EXISTS=$(gh pr list --head ${{ github.ref_name }} --base main --json url --jq '.[0].url')
+          if [ -z "$PR_EXISTS" ]; then
+            gh pr create \
+              --base main \
+              --head ${{ github.ref_name }} \
+              --title "${{ github.ref_name }}: Automated PR" \
+              --body "## Automated PR\n\nThis PR was created automatically by GitHub Actions.\n\nWhen all CI checks pass ✅, it can be merged into main."
+          else
+            echo "PR já existe: $PR_EXISTS"
+          fi
