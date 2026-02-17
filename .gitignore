@@ -374,3 +374,6 @@ FodyWeavers.xsd
 
 # Security - Ignore certificate files
 **/*.pfx
+
+# Temporary Scripts
+temp_fix_security.ps1

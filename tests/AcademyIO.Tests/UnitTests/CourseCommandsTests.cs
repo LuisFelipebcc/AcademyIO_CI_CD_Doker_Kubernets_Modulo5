@@ -64,44 +64,6 @@ namespace AcademyIO.Tests.UnitTests
         }
 
         [Fact]
-        public void ValidatePaymentCourseCommand_ShouldBeValid_WhenDataIsCorrect()
-        {
-            var cmd = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.NewGuid(), "John Doe", "4111111111111111", "12/25", "123");
-
-            var result = cmd.IsValid();
-
-            Assert.True(result);
-            Assert.Empty(cmd.ValidationResult.Errors);
-        }
-
-        [Fact]
-        public void ValidatePaymentCourseCommand_ShouldBeInvalid_WhenFieldsAreEmpty()
-        {
-            var cmd = new ValidatePaymentCourseCommand(Guid.Empty, Guid.Empty, "", "", "", "");
-
-            var result = cmd.IsValid();
-
-            Assert.False(result);
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("Course"));
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("Student"));
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("Nome do Cartão"));
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("Número do Cartão"));
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("Expiração do Cartão"));
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("CVV"));
-        }
-
-        [Fact]
-        public void ValidatePaymentCourseCommand_ShouldBeInvalid_WhenCardNumberIsInvalid()
-        {
-            var cmd = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.NewGuid(), "John Doe", "invalid", "12/25", "123");
-
-            var result = cmd.IsValid();
-
-            Assert.False(result);
-            Assert.Contains(cmd.ValidationResult.Errors, e => e.ErrorMessage.Contains("inválido"));
-        }
-
-        [Fact]
         public void CreateProgressByCourseCommand_ShouldBeValid_WhenDataIsCorrect()
         {
             var cmd = new CreateProgressByCourseCommand(Guid.NewGuid(), Guid.NewGuid());

@@ -6,7 +6,6 @@ namespace AcademyIO.Courses.API.Models
     {
         public Course() : base()
         {
-            _lessons = new List<Lesson>();
             Name = string.Empty;
             Description = string.Empty;
         }

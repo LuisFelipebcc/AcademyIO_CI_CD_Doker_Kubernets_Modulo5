@@ -1,5 +1,4 @@
 ﻿using AcademyIO.Core.Interfaces.Services;
-using AcademyIO.Core.Messages.IntegrationCommands;
 using AcademyIO.Core.Notifications;
 using AcademyIO.Payments.API.Application.Query;
 using AcademyIO.Payments.API.Business;
@@ -24,12 +23,10 @@ namespace AcademyIO.Payments.API.Configuration
 
             services.AddScoped<IPaymentQuery, PaymentQuery>();
 
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<MakePaymentCourseCommand>());
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ValidatePaymentCourseCommand>());
 
             services.AddHttpContextAccessor();
             services.AddScoped<IAspNetUser, AspNetUser>();
-
-            services.AddHostedService<PaymentRequestedIntegrationHandler>();
 
             return services;
         }
