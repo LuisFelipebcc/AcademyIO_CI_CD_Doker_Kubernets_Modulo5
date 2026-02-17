@@ -53,7 +53,7 @@ jobs:
               - 'src/building-blocks/**'
 
   build-auth:
-    needs: changes
+    needs: [changes, unit-tests]
     if: needs.changes.outputs.auth == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
@@ -63,7 +63,7 @@ jobs:
     secrets: inherit
 
   build-courses:
-    needs: changes
+    needs: [changes, unit-tests]
     if: needs.changes.outputs.courses == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
@@ -73,7 +73,7 @@ jobs:
     secrets: inherit
 
   build-students:
-    needs: changes
+    needs: [changes, unit-tests]
     if: needs.changes.outputs.students == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
@@ -83,7 +83,7 @@ jobs:
     secrets: inherit
 
   build-payments:
-    needs: changes
+    needs: [changes, unit-tests]
     if: needs.changes.outputs.payments == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
@@ -93,7 +93,7 @@ jobs:
     secrets: inherit
 
   build-bff:
-    needs: changes
+    needs: [changes, unit-tests]
     if: needs.changes.outputs.bff == 'true'
     uses: ./.github/workflows/ci-template.yml
     with:
