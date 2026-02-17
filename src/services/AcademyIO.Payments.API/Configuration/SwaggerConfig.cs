@@ -1,7 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Models;
 
 namespace AcademyIO.Payments.API.Configuration
 {
@@ -9,27 +6,37 @@ namespace AcademyIO.Payments.API.Configuration
     {
         public static void AddSwaggerConfiguration(this IServiceCollection services)
         {
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo()
+                options.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "Academy IO - Payments API",
-                    Description = "Esta API faz parte do curso ASP.NET Core Enterprise Applications.",
-                    Contact = new OpenApiContact() { Name = "Eduardo Pires", Email = "contato@desenvolvedor.io" },
-                    License = new OpenApiLicense() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
+                    Description = "API responsável pelo processamento de pagamentos.",
+                    Version = "v1",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Eduardo Pires",
+                        Email = "contato@desenvolvedor.io"
+                    },
+                    License = new OpenApiLicense
+                    {
+                        Name = "MIT",
+                        Url = new Uri("https://opensource.org/licenses/MIT")
+                    }
                 });
 
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                // Configuração JWT correta (OpenAPI 3 padrão)
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "Insira o token JWT desta maneira: Bearer {seu token}",
+                    Description = "Insira o token JWT no formato: Bearer {seu token}",
                     Name = "Authorization",
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
@@ -40,25 +47,30 @@ namespace AcademyIO.Payments.API.Configuration
                                 Id = "Bearer"
                             }
                         },
-                        new string[] {}
+                        Array.Empty<string>()
                     }
                 });
 
+                // Habilita suporte a XML comments
+                var xmlFile = $"{typeof(SwaggerConfig).Assembly.GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+
+                if (File.Exists(xmlPath))
+                {
+                    options.IncludeXmlComments(xmlPath);
+                }
             });
         }
 
-        public static IApplicationBuilder UseSwaggerSetup(this IApplicationBuilder app)
+        public static void UseSwaggerSetup(this IApplicationBuilder app)
         {
-            if (app == null) throw new ArgumentNullException(nameof(app));
-
             app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Academy IO - Payments API");
-                c.DocumentTitle = "Academy IO - Payments API";
-            });
 
-            return app;
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Academy IO - Payments API v1");
+                options.RoutePrefix = string.Empty; // Swagger na raiz (opcional)
+            });
         }
     }
 }

@@ -1,92 +1,32 @@
-name: CI Pipeline (Reusable)
+name: CI Template
 
 on:
   workflow_call:
     inputs:
       project_name:
-        description: "Project name (for logging)"
         required: true
         type: string
       dockerfile_path:
-        description: "Path to Dockerfile"
         required: true
         type: string
       docker_image_name:
-        description: "Docker image name"
         required: true
         type: string
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: Restore dependencies
-        run: dotnet restore AcademyIO.sln
-
-      - name: Build
-        run: dotnet build --no-restore -c Debug AcademyIO.sln
-
-      - name: Lint Check
-        run: dotnet format --verify-no-changes
-
-      - name: Test (with coverage)
-        run: dotnet test --no-build -c Debug --verbosity normal --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings AcademyIO.sln
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ inputs.project_name }}
-          path: "**/TestResults/**/coverage.cobertura.xml"
-
-      - name: Check project coverage threshold (80%)
-        shell: bash
-        run: |
-          file=$(find . -type f -path "*/TestResults/*/coverage.cobertura.xml" -print -quit)
-          if [ -z "$file" ]; then echo "Coverage file not found"; exit 1; fi
-          python3 - "$file" "${{ inputs.project_name }}" <<'PY'
-            import sys,xml.etree.ElementTree as ET
-            file=sys.argv[1]
-            proj=sys.argv[2].replace('/', '\\')
-            tree=ET.parse(file)
-            root=tree.getroot()
-            lines_covered=0
-            lines_valid=0
-            for pkg in root.findall('.//class'):
-                fn=pkg.get('filename')
-                if fn and proj in fn:
-                    for line in pkg.findall('.//line'):
-                        lines_valid+=1
-                        if int(line.get('hits', '0'))>0:
-                            lines_covered+=1
-            if lines_valid==0:
-                print('No instrumented lines for project', proj); sys.exit(0)
-            rate=lines_covered/lines_valid
-            print(f'Project coverage: {rate*100:.2f}% (covered {lines_covered}/{lines_valid})')
-            if rate < 0.80:
-                print('Coverage below threshold (80%)')
-                sys.exit(1)
-            PY
-
-  build-and-push-docker-image:
-    needs: build
-    if: github.ref == 'refs/heads/main' && success()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check Docker secrets
-        run: |
-          if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-            echo "Missing DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secrets"; exit 1;
-          fi
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -94,12 +34,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.docker_image_name }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push ${{ inputs.project_name }}
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ inputs.dockerfile_path }}
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.docker_image_name }}:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.docker_image_name }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,7 +1,7 @@
-using System;
-using Xunit;
 using AcademyIO.Core.DomainObjects;
 using AcademyIO.Core.Messages;
+using System;
+using Xunit;
 
 namespace AcademyIO.Tests.UnitTests
 {

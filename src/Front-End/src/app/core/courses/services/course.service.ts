@@ -10,20 +10,20 @@ import { BaseService } from '../../../services/base.service';
   providedIn: 'root'
 })
 export class CourseService extends BaseService {
-  private apiUrl = 'https://localhost:7283/api/Course';
+  private apiUrl = 'https://localhost:7283/api';
 
-    constructor(
-            private http: HttpClient,
-            @Inject(PLATFORM_ID) platformId: Object
-        ) {
-            super(platformId); // ✅ Passando corretamente
-        }
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    super(platformId); // ✅ Passando corretamente
+  }
 
   /**
    * Busca a lista de cursos do backend.
    */
   getCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(`${this.apiUrl}/courses`).pipe(
+    return this.http.get<Course[]>(`${this.apiUrl}/Courses`).pipe(
       catchError(this.handleError)
     );
   }
@@ -32,35 +32,35 @@ export class CourseService extends BaseService {
    * Exclui um curso pelo ID.
    */
   deleteCourse(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/remove-course?id=${id}`, this.getAuthHeader()).pipe(catchError(this.handleError));
+    return this.http.delete<void>(`${this.apiUrl}/Courses/remove/${id}`, this.getAuthHeader()).pipe(catchError(this.handleError));
   }
 
   /**
    * Cria um novo curso no backend.
    */
   createCourse(courseData: Omit<Course, 'id'>): Observable<Course> {
-    return this.http.post<Course>(`${this.apiUrl}/create-course`, courseData, this.getAuthHeaderJson()).pipe(catchError(this.handleError));
+    return this.http.post<Course>(`${this.apiUrl}/Courses/create`, courseData, this.getAuthHeaderJson()).pipe(catchError(this.handleError));
   }
 
   /**
    * Cria uma nova aula associada a um curso.
    */
   createLesson(lessonData: CreateLessonDto): Observable<Lesson> {
-    return this.http.post<Lesson>(`${this.apiUrl}/create-lesson`, lessonData, this.getAuthHeaderJson()).pipe(catchError(this.handleError));
+    return this.http.post<Lesson>(`${this.apiUrl}/Lessons`, lessonData, this.getAuthHeaderJson()).pipe(catchError(this.handleError));
   }
 
   /**
    * Busca as aulas de um curso específico.
    */
   getLessonsByCourse(courseId: string): Observable<Lesson[]> {
-    return this.http.get<Lesson[]>(`${this.apiUrl}/lesson-course?courseId=${courseId}`).pipe(catchError(this.handleError));
+    return this.http.get<Lesson[]>(`${this.apiUrl}/Lessons/get-by-courseId/${courseId}`).pipe(catchError(this.handleError));
   }
 
   /**
    * Busca um curso específico pelo ID.
    */
   getCourseById(courseId: string): Observable<Course> {
-    return this.http.get<Course>(`${this.apiUrl}/course?id=${courseId}`).pipe(catchError(this.handleError));
+    return this.http.get<Course>(`${this.apiUrl}/Courses/${courseId}`).pipe(catchError(this.handleError));
   }
 
   private handleError(error: HttpErrorResponse) {

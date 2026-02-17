@@ -1,4 +1,4 @@
-name: Main CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,114 +6,121 @@ on:
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+  packages: write
 
 jobs:
+  # Detecta quais serviços mudaram
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      courses: ${{ steps.filter.outputs.courses }}
+      students: ${{ steps.filter.outputs.students }}
+      payments: ${{ steps.filter.outputs.payments }}
+      bff: ${{ steps.filter.outputs.bff }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'src/services/AcademyIO.Auth.API/**'
+            courses:
+              - 'src/services/AcademyIO.Courses.API/**'
+            students:
+              - 'src/services/AcademyIO.Students.API/**'
+            payments:
+              - 'src/services/AcademyIO.Payments.API/**'
+            bff:
+              - 'src/api-gateways/AcademyIO.Bff/**'
+
+  build-auth:
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "AcademyIO.Auth.API"
+      dockerfile_path: "./src/services/AcademyIO.Auth.API/Dockerfile"
+      docker_image_name: "academyio-auth-api"
+    secrets: inherit
+
+  build-courses:
+    needs: changes
+    if: needs.changes.outputs.courses == 'true'
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "AcademyIO.Courses.API"
+      dockerfile_path: "./src/services/AcademyIO.Courses.API/Dockerfile"
+      docker_image_name: "academyio-courses-api"
+    secrets: inherit
+
+  build-students:
+    needs: changes
+    if: needs.changes.outputs.students == 'true'
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "AcademyIO.Students.API"
+      dockerfile_path: "./src/services/AcademyIO.Students.API/Dockerfile"
+      docker_image_name: "academyio-students-api"
+    secrets: inherit
+
+  build-payments:
+    needs: changes
+    if: needs.changes.outputs.payments == 'true'
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "AcademyIO.Payments.API"
+      dockerfile_path: "./src/services/AcademyIO.Payments.API/Dockerfile"
+      docker_image_name: "academyio-payments-api"
+    secrets: inherit
+
+  build-bff:
+    needs: changes
+    if: needs.changes.outputs.bff == 'true'
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      project_name: "AcademyIO.Bff"
+      dockerfile_path: "./src/api-gateways/AcademyIO.Bff/Dockerfile"
+      docker_image_name: "academyio-bff"
+    secrets: inherit
+
   create-pr:
+    needs:
+      [build-auth, build-courses, build-students, build-payments, build-bff]
     if: |
-      github.event_name == 'push' && 
-      (startsWith(github.ref, 'refs/heads/feature/') || 
-       startsWith(github.ref, 'refs/heads/fix/') || 
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      github.event_name == 'push' &&
+      (startsWith(github.ref, 'refs/heads/feature/') ||
+       startsWith(github.ref, 'refs/heads/fix/') ||
        startsWith(github.ref, 'refs/heads/hotfix/'))
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ github.ref_name }}
         run: |
-          existing_pr=$(gh pr list --head "$BRANCH" --base main --json number --jq .[0].number 2>/dev/null || echo "")
-
-          if [ -n "$existing_pr" ]; then
-            echo "PR already exists: #$existing_pr"
-            exit 0
+          PR_EXISTS=$(gh pr list --head ${{ github.ref_name }} --base main --json url --jq '.[0].url')
+          if [ -z "$PR_EXISTS" ]; then
+            gh pr create \
+              --base main \
+              --head ${{ github.ref_name }} \
+              --title "${{ github.ref_name }}: Automated PR" \
+              --body "## Automated PR\n\nThis PR was created automatically by GitHub Actions.\n\nWhen all CI checks pass ✅, it can be merged into main."
+          else
+            echo "PR já existe: $PR_EXISTS"
           fi
-
-          gh pr create \
-            --head "$BRANCH" \
-            --base main \
-            --title "$BRANCH: automated PR" \
-            --body "## Automated PR for branch: \`$BRANCH\`
-
-            This PR was created automatically by GitHub Actions.
-
-            When all CI checks pass ✅, this PR can be merged to main." || echo "PR creation skipped"
-
-  build-auth:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: Restore dependencies
-        run: dotnet restore AcademyIO.sln
-
-      - name: Build
-        run: dotnet build --no-restore -c Debug AcademyIO.sln
-
-      - name: Lint Check
-        run: dotnet format --verify-no-changes
-
-      - name: Test (with coverage)
-        run: dotnet test --no-build -c Debug --verbosity normal --collect:"XPlat Code Coverage" --settings tests/coverage.runsettings AcademyIO.sln
-
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-auth
-          path: "**/TestResults/**/coverage.cobertura.xml"
-
-      - name: Check project coverage threshold (80%)
-        shell: bash
-        run: |
-          file=$(find . -type f -path "*/TestResults/*/coverage.cobertura.xml" -print -quit)
-          if [ -z "$file" ]; then echo "Coverage file not found"; exit 1; fi
-          python3 - "$file" "src/services/AcademyIO.Auth.API/" <<'PY'
-          import sys,xml.etree.ElementTree as ET
-          file=sys.argv[1]
-          proj=sys.argv[2].replace('/', '\\')
-          tree=ET.parse(file)
-          root=tree.getroot()
-          lines_covered=0
-          lines_valid=0
-          for pkg in root.findall('.//class'):
-              fn=pkg.get('filename')
-              if fn and proj in fn:
-                  for line in pkg.findall('.//line'):
-                      lines_valid+=1
-                      if int(line.get('hits', '0'))>0:
-                          lines_covered+=1
-          if lines_valid==0:
-              print('No instrumented lines for project', proj); sys.exit(0)
-          rate=lines_covered/lines_valid
-          print(f'Project coverage: {rate*100:.2f}% (covered {lines_covered}/{lines_valid})')
-          if rate < 0.80:
-              print('Coverage below threshold (80%)')
-              sys.exit(1)
-          PY
-
-      - name: Build and push Docker image
-        if: github.ref == 'refs/heads/main' && success()
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: |
-          if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_TOKEN" ]; then
-            echo "Docker secrets not configured"
-            exit 0
-          fi
-          echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker build -f ./src/services/AcademyIO.Auth.API/Dockerfile -t "$DOCKER_USERNAME/academyio-auth-api:${{ github.sha }}" -t "$DOCKER_USERNAME/academyio-auth-api:latest" .
-          docker push "$DOCKER_USERNAME/academyio-auth-api:${{ github.sha }}"
-          docker push "$DOCKER_USERNAME/academyio-auth-api:latest"

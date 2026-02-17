@@ -4,6 +4,7 @@ using AcademyIO.Core.Notifications;
 using AcademyIO.Payments.API.Application.Query;
 using AcademyIO.Payments.API.Business;
 using AcademyIO.Payments.API.Data.Repository;
+using AcademyIO.Payments.API.Services;
 using AcademyIO.WebAPI.Core.User;
 
 namespace AcademyIO.Payments.API.Configuration
@@ -27,6 +28,8 @@ namespace AcademyIO.Payments.API.Configuration
 
             services.AddHttpContextAccessor();
             services.AddScoped<IAspNetUser, AspNetUser>();
+
+            services.AddHostedService<PaymentRequestedIntegrationHandler>();
 
             return services;
         }
