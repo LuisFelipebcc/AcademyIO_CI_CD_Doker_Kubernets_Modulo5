@@ -24,16 +24,21 @@ COPY ["src/", "src/"]
 # Publish the application.
 WORKDIR "/src/src/services/AcademyIO.Auth.API"
 # Ensure packages and project references are restored before publishing
-RUN dotnet restore "AcademyIO.Auth.API.csproj" \
-    && dotnet publish "AcademyIO.Auth.API.csproj" -c Release -o /app/publish /p:UseAppHost=false -v minimal
+RUN dotnet publish "AcademyIO.Auth.API.csproj" -c Release -o /app/publish /p:UseAppHost=false -v minimal --no-restore
 
 # Stage 2: Final - Creates the final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
+
+# Instala curl para o HealthCheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copy the published artifacts from the build stage
 COPY --from=build /app/publish .
+
+USER app
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl --fail http://localhost:8080/health/live || exit 1
 
 ENTRYPOINT ["dotnet", "AcademyIO.Auth.API.dll"]

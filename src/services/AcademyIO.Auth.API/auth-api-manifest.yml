@@ -17,7 +17,7 @@ spec:
           image: {{DOCKERHUB_USERNAME}}/academyio-auth-api:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           envFrom:
             - configMapRef:
                 name: auth-api-config
@@ -26,14 +26,14 @@ spec:
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 20
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
@@ -55,7 +55,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
   type: ClusterIP
 ---
 apiVersion: v1
@@ -65,7 +65,7 @@ metadata:
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   DOTNET_RUNNING_IN_CONTAINER: "true"
-  ASPNETCORE_URLS: "http://*:80"
+  ASPNETCORE_URLS: "http://*:8080"
   MessageBus__ConnectionString: "amqp://guest:guest@rabbitmq-service:5672/" # Aponta para o serviço do RabbitMQ no K8s
 ---
 apiVersion: v1
