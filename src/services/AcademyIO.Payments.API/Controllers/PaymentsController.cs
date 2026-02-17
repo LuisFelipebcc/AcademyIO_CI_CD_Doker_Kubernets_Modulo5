@@ -1,65 +1,45 @@
-using AcademyIO.Payments.API.Business;
-using AcademyIO.Payments.API.Data;
+using AcademyIO.Payments.API.Services;
 using AcademyIO.WebAPI.Core.Controllers;
 using AcademyIO.WebAPI.Core.User;
+using FluentValidation.Results;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace AcademyIO.Payments.API.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class PaymentsController : MainController
+namespace AcademyIO.Payments.API.Controllers
 {
-    private readonly PaymentsContext _context;
-    private readonly IAspNetUser _aspNetUser;
-
-    public PaymentsController(PaymentsContext context, IAspNetUser aspNetUser)
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class PaymentsController : MainController
     {
-        _context = context;
-        _aspNetUser = aspNetUser;
+        private readonly IMediator _mediator;
+        private readonly IAspNetUser _aspNetUser;
+
+        public PaymentsController(IMediator mediator, IAspNetUser aspNetUser)
+        {
+            _mediator = mediator;
+            _aspNetUser = aspNetUser;
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> MakePayment(PaymentInputModel paymentModel)
+        {
+            if (!ModelState.IsValid) return CustomResponse(ModelState);
+
+            var command = new ValidatePaymentCourseCommand(
+                paymentModel.CourseId,
+                _aspNetUser.GetUserId(),
+                paymentModel.CardName,
+                paymentModel.CardNumber,
+                paymentModel.CardExpirationDate,
+                paymentModel.CardCVV);
+
+            var success = await _mediator.Send(command);
+
+            return CustomResponse(command.ValidationResult ?? new ValidationResult());
+        }
     }
-
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Payment>>> GetAll()
-    {
-        var payments = await _context.Set<Payment>().Where(p => !p.Deleted).ToListAsync();
-        return Ok(payments);
-    }
-
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<Payment>> GetById(Guid id)
-    {
-        var payment = await _context.Set<Payment>().FirstOrDefaultAsync(p => p.Id == id && !p.Deleted);
-        if (payment == null) return NotFound();
-        return Ok(payment);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<Payment>> Create(Payment payment)
-    {
-        _context.Set<Payment>().Add(payment);
-        await _context.Commit();
-        return CreatedAtAction(nameof(GetById), new { id = payment.Id }, payment);
-    }
-
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        var payment = await _context.Set<Payment>().FirstOrDefaultAsync(p => p.Id == id && !p.Deleted);
-        if (payment == null) return NotFound();
-
-        _context.Set<Payment>().Remove(payment);
-        await _context.Commit();
-        return NoContent();
-    }
-
-
-    [HttpGet("exists")]
-    public async Task<ActionResult<bool>> PaymentExists(Guid courseId, Guid studentId)
-    {
-        var exists = await _context.Set<Payment>().AnyAsync(p => p.StudentId == studentId && p.CourseId == courseId && !p.Deleted);
-        return Ok(exists);
-    }
-
 }

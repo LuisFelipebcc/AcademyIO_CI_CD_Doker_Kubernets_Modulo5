@@ -20,6 +20,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\building-blocks\AcademyIO.WebAPI.Core\AcademyIO.WebAPI.Core.csproj" />
+		<ProjectReference Include="..\AcademyIO.Payments.API\AcademyIO.Payments.API.csproj" />
 	</ItemGroup>
 
 </Project>

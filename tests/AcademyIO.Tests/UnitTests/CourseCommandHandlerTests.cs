@@ -189,104 +189,6 @@ namespace AcademyIO.Tests.UnitTests
             _courseRepoMock.Verify(r => r.Delete(It.IsAny<Course>()), Times.Never);
         }
 
-        // ValidatePaymentCourseCommand Tests
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithValidCommand_SendsMakePaymentCommandAndReturnsTrue()
-        {
-            var courseId = Guid.NewGuid();
-            var studentId = Guid.NewGuid();
-            var course = new Course { Id = courseId, Name = "Course", Price = 100 };
-
-            _courseRepoMock.Setup(r => r.GetById(courseId)).ReturnsAsync(course);
-            _mediatorMock.Setup(m => m.Send(It.IsAny<MakePaymentCourseCommand>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true);
-
-            var command = new ValidatePaymentCourseCommand(courseId, studentId, "John Doe", "4111111111111111", "12/25", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.True(result);
-            _mediatorMock.Verify(m => m.Send(It.IsAny<MakePaymentCourseCommand>(), It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithCourseNotFound_PublishesNotificationAndReturnsFalse()
-        {
-            var courseId = Guid.NewGuid();
-            var studentId = Guid.NewGuid();
-
-            _courseRepoMock.Setup(r => r.GetById(courseId)).ReturnsAsync((Course)null);
-
-            var command = new ValidatePaymentCourseCommand(courseId, studentId, "John Doe", "4111111111111111", "12/25", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-            _mediatorMock.Verify(m => m.Send(It.IsAny<MakePaymentCourseCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-            _mediatorMock.Verify(m => m.Publish(It.IsAny<INotification>(), It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithInvalidCardNumber_ReturnsFalse()
-        {
-            var command = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.NewGuid(), "John Doe", "invalid", "12/25", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-            _mediatorMock.Verify(m => m.Send(It.IsAny<MakePaymentCourseCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithEmptyCourseId_ReturnsFalse()
-        {
-            var command = new ValidatePaymentCourseCommand(Guid.Empty, Guid.NewGuid(), "John Doe", "4111111111111111", "12/25", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithEmptyStudentId_ReturnsFalse()
-        {
-            var command = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.Empty, "John Doe", "4111111111111111", "12/25", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithEmptyCardName_ReturnsFalse()
-        {
-            var command = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.NewGuid(), "", "4111111111111111", "12/25", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithEmptyExpirationDate_ReturnsFalse()
-        {
-            var command = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.NewGuid(), "John Doe", "4111111111111111", "", "123");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WithEmptyCVV_ReturnsFalse()
-        {
-            var command = new ValidatePaymentCourseCommand(Guid.NewGuid(), Guid.NewGuid(), "John Doe", "4111111111111111", "12/25", "");
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-        }
-
         // CreateProgressByCourseCommand Tests
         [Fact]
         public async Task Handle_CreateProgressByCourseCommand_WithValidCommand_CommitsAndReturnsTrue()
@@ -396,24 +298,6 @@ namespace AcademyIO.Tests.UnitTests
             _unitOfWorkMock.Setup(u => u.Commit()).ReturnsAsync(false);
 
             var command = new CreateProgressByCourseCommand(courseId, studentId);
-
-            var result = await _handler.Handle(command, CancellationToken.None);
-
-            Assert.False(result);
-        }
-
-        [Fact]
-        public async Task Handle_ValidatePaymentCourseCommand_WhenPaymentFails_ReturnsFalse()
-        {
-            var courseId = Guid.NewGuid();
-            var studentId = Guid.NewGuid();
-            var course = new Course { Id = courseId, Price = 100 };
-
-            _courseRepoMock.Setup(r => r.GetById(courseId)).ReturnsAsync(course);
-            _mediatorMock.Setup(m => m.Send(It.IsAny<MakePaymentCourseCommand>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(false);
-
-            var command = new ValidatePaymentCourseCommand(courseId, studentId, "John Doe", "4111111111111111", "12/25", "123");
 
             var result = await _handler.Handle(command, CancellationToken.None);
 

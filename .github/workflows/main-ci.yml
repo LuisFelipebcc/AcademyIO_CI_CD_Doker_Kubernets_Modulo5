@@ -25,6 +25,7 @@ jobs:
       students: ${{ steps.filter.outputs.students }}
       payments: ${{ steps.filter.outputs.payments }}
       bff: ${{ steps.filter.outputs.bff }}
+      tests: ${{ steps.filter.outputs.tests }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +43,9 @@ jobs:
               - 'src/services/AcademyIO.Payments.API/**'
             bff:
               - 'src/api-gateways/AcademyIO.Bff/**'
+            tests:
+              - 'tests/**'
+              - 'src/building-blocks/**'
 
   build-auth:
     needs: changes
@@ -93,9 +97,36 @@ jobs:
       docker_image_name: "academyio-bff"
     secrets: inherit
 
+  unit-tests:
+    needs: changes
+    if: ${{ needs.changes.outputs.auth == 'true' || needs.changes.outputs.courses == 'true' || needs.changes.outputs.students == 'true' || needs.changes.outputs.payments == 'true' || needs.changes.outputs.bff == 'true' || needs.changes.outputs.tests == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore tests/AcademyIO.Tests/AcademyIO.Tests.csproj
+      - name: Test with Coverage
+        run: dotnet test tests/AcademyIO.Tests/AcademyIO.Tests.csproj --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage/**/coverage.cobertura.xml
+
   create-pr:
     needs:
-      [build-auth, build-courses, build-students, build-payments, build-bff]
+      [
+        build-auth,
+        build-courses,
+        build-students,
+        build-payments,
+        build-bff,
+        unit-tests,
+      ]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&

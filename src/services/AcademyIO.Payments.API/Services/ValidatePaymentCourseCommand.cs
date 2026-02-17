@@ -1,9 +1,11 @@
 using AcademyIO.Core.Messages;
 using FluentValidation;
+using FluentValidation.Results;
+using MediatR;
 
 namespace AcademyIO.Payments.API.Services
 {
-    public class ValidatePaymentCourseCommand : Command
+    public class ValidatePaymentCourseCommand : Command, IRequest<ValidationResult>
     {
         public Guid CourseId { get; private set; }
         public Guid StudentId { get; private set; }
