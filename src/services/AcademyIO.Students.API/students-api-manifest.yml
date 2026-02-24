@@ -1,9 +1,22 @@
+# --- INSTRUÇÕES PARA CRIAÇÃO DE SECRETS ---
+# Os segredos reais NÃO devem ser versionados. Crie-os manualmente no cluster:
+#
+# kubectl create secret generic students-api-secret -n academyio \
+#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=StudentsDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true'
+# ------------------------------------------
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: students-api-deployment
+  namespace: academyio
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: students-api
@@ -14,7 +27,7 @@ spec:
     spec:
       containers:
         - name: students-api
-          image: {{DOCKERHUB_USERNAME}}/academyio-students-api:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
+          image: luisfelipebcc/academyio-students-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -49,6 +62,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: students-api-service
+  namespace: academyio
 spec:
   selector:
     app: students-api
@@ -62,24 +76,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: students-api-config
+  namespace: academyio
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   DOTNET_RUNNING_IN_CONTAINER: "true"
   ASPNETCORE_URLS: "http://*:80"
   MessageBus__ConnectionString: "amqp://guest:guest@rabbitmq-service:5672/"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: students-api-secret
-type: Opaque
-# --- ATENÇÃO ---
-# Este arquivo é um template. Os segredos reais NÃO devem ser versionados.
-# Crie o segredo no cluster Kubernetes antes de fazer o deploy.
-#
-# Exemplo de comando para criar o segredo:
-# kubectl create secret generic students-api-secret \
-#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=StudentsDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true'
-#
-# O campo 'stringData' foi omitido intencionalmente do controle de versão.
-stringData: {}

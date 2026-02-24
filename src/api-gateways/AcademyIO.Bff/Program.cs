@@ -1,5 +1,6 @@
 using AcademyIO.Bff.Configuration;
 using AcademyIO.Bff.Extensions;
+using AcademyIO.WebAPI.Core.Configuration;
 using AcademyIO.WebAPI.Core.Identity;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -41,6 +42,8 @@ builder.Services.AddHealthChecks()
     });
 
 builder.Services.RegisterServices();
+
+builder.Services.AddOpenTelemetryConfiguration(builder.Configuration, "AcademyIO.Bff");
 
 builder.Services.Configure<AppServicesSettings>(builder.Configuration.GetSection("AppServicesSettings"));
 //builder.Services.AddMessageBusConfiguration(builder.Configuration);

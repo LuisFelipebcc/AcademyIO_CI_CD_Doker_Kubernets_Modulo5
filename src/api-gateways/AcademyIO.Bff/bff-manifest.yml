@@ -1,9 +1,22 @@
+# --- INSTRUÇÕES PARA CRIAÇÃO DE SECRETS ---
+# Os segredos reais NÃO devem ser versionados. Crie-os manualmente no cluster:
+#
+# kubectl create secret generic bff-secret -n academyio \
+#   --from-literal=Jwt__Key='uma-chave-secreta-super-segura-para-producao'
+# ------------------------------------------
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bff-deployment
+  namespace: academyio
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: bff
@@ -14,7 +27,7 @@ spec:
     spec:
       containers:
         - name: bff
-          image: {{DOCKERHUB_USERNAME}}/academyio-bff:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
+          image: luisfelipebcc/academyio-bff:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -49,6 +62,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: bff-service
+  namespace: academyio
 spec:
   selector:
     app: bff
@@ -56,12 +70,13 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 80
-  type: LoadBalancer # Expõe o BFF para acesso externo
+  type: ClusterIP # Alterado para ClusterIP para uso com Ingress
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: bff-config
+  namespace: academyio
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   DOTNET_RUNNING_IN_CONTAINER: "true"
@@ -70,19 +85,3 @@ data:
   AppServicesSettings__CourseUrl: "http://courses-api-service"
   AppServicesSettings__StudentUrl: "http://students-api-service"
   AppServicesSettings__PaymentUrl: "http://payments-api-service"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: bff-secret
-type: Opaque
-# --- ATENÇÃO ---
-# Este arquivo é um template. Os segredos reais NÃO devem ser versionados.
-# Crie o segredo no cluster Kubernetes antes de fazer o deploy.
-#
-# Exemplo de comando para criar o segredo:
-# kubectl create secret generic bff-secret \
-#   --from-literal=Jwt__Key='uma-chave-secreta-super-segura-para-producao'
-#
-# O campo 'stringData' foi omitido intencionalmente do controle de versão.
-stringData: {}

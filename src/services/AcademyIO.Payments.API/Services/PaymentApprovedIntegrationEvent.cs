@@ -1,7 +1,7 @@
 using System;
-using AcademyIO.Core.Messages;
+using AcademyIO.Core.Messages.Integration;
 
-namespace AcademyIO.Core.Messages.Integration
+namespace AcademyIO.Payments.API.Services
 {
     public class PaymentApprovedIntegrationEvent : IntegrationEvent
     {

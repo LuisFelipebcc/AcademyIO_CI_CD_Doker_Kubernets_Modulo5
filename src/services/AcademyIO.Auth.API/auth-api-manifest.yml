@@ -1,9 +1,23 @@
+# --- INSTRUÇÕES PARA CRIAÇÃO DE SECRETS ---
+# Os segredos reais NÃO devem ser versionados. Crie-os manualmente no cluster:
+#
+# kubectl create secret generic auth-api-secret -n academyio \
+#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=AuthDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true' \
+#   --from-literal=Jwt__Key='uma-chave-secreta-super-segura-para-producao'
+# ------------------------------------------
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: auth-api-deployment
+  namespace: academyio
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: auth-api
@@ -12,9 +26,13 @@ spec:
       labels:
         app: auth-api
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
         - name: auth-api
-          image: {{DOCKERHUB_USERNAME}}/academyio-auth-api:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
+          image: ${DOCKERHUB_USERNAME}/academyio-auth-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -23,6 +41,11 @@ spec:
                 name: auth-api-config
             - secretRef:
                 name: auth-api-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           livenessProbe:
             httpGet:
               path: /health/live
@@ -49,6 +72,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: auth-api-service
+  namespace: academyio
 spec:
   selector:
     app: auth-api
@@ -58,29 +82,38 @@ spec:
       targetPort: 8080
   type: ClusterIP
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: auth-api-ingress
+  namespace: academyio
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+    - hosts:
+        - auth.academyio.com
+      secretName: auth-api-tls
+  rules:
+    - host: auth.academyio.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-api-service
+                port:
+                  number: 80
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: auth-api-config
+  namespace: academyio
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   DOTNET_RUNNING_IN_CONTAINER: "true"
   ASPNETCORE_URLS: "http://*:8080"
+  SEQ_SERVER_URL: "http://seq-service:5341"
   MessageBus__ConnectionString: "amqp://guest:guest@rabbitmq-service:5672/" # Aponta para o serviço do RabbitMQ no K8s
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: auth-api-secret
-type: Opaque
-# --- ATENÇÃO ---
-# Este arquivo é um template. Os segredos reais NÃO devem ser versionados.
-# Crie o segredo no cluster Kubernetes antes de fazer o deploy.
-#
-# Exemplo de comando para criar o segredo:
-# kubectl create secret generic auth-api-secret \
-#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=AuthDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true' \
-#   --from-literal=Jwt__Key='uma-chave-secreta-super-segura-para-producao'
-#
-# O campo 'stringData' foi omitido intencionalmente do controle de versão.
-stringData: {}
