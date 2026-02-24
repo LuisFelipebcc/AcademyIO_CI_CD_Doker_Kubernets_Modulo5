@@ -1,0 +1,30 @@
+replicaCount: 1
+
+image:
+  repository: academyio-auth-api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+dockerhubUsername: "" # Deve ser injetado via --set no CI/CD
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  host: auth.academyio.com
+  tlsSecret: auth-api-tls
+
+env:
+  aspnetcoreEnvironment: Production
+  seqUrl: "http://seq-service:5341"
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"

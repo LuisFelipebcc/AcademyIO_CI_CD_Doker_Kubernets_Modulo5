@@ -23,6 +23,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddMessageBusConfiguration(builder.Configuration);
+
+builder.Services.AddOpenTelemetryConfiguration(builder.Configuration, "AcademyIO.Students.API");
+
 var app = builder.Build();
 
 app.UseSwaggerSetup();

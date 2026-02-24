@@ -135,23 +135,22 @@ cd src
 # Aplique os manifestos de infra
 kubectl apply -f ./k8s/sqlserver.yml
 kubectl apply -f ./k8s/rabbitmq.yml
+kubectl apply -f ./k8s/logging.yml
 ```
 
 #### Passo 3: Faça o Deploy dos Serviços da Aplicação
 
-Antes de aplicar os manifestos, você precisa **substituir o placeholder do nome de usuário do Docker Hub** nos arquivos `*-manifest.yml` de cada serviço.
-
-A imagem está no formato `{{DOCKERHUB_USERNAME}}/<nome-da-imagem>:latest`. **Substitua `{{DOCKERHUB_USERNAME}}` pelo seu usuário do Docker Hub** ou configure o secret `DOCKERHUB_USERNAME` e use `${{ secrets.DOCKERHUB_USERNAME }}` nos workflows para etiquetar as imagens automaticamente.
-
-Depois de substituir, aplique os manifestos para cada serviço:
+Para aplicar os manifestos com o nome de usuário correto do Docker Hub, utilize o comando `envsubst` (disponível em ambientes Linux/Git Bash) para substituir a variável `${DOCKERHUB_USERNAME}` dinamicamente.
 
 ```bash
 # Estando na pasta src
-kubectl apply -f ./services/AcademyIO.Auth.API/auth-api-manifest.yml
-kubectl apply -f ./services/AcademyIO.Courses.API/courses-api-manifest.yml
-kubectl apply -f ./services/AcademyIO.Students.API/students-api-manifest.yml
-kubectl apply -f ./services/AcademyIO.Payments.API/payments-api-manifest.yml
-kubectl apply -f ./api-gateways/AcademyIO.Bff/bff-manifest.yml
+export DOCKERHUB_USERNAME=<seu-usuario-dockerhub>
+
+envsubst < ./services/AcademyIO.Auth.API/auth-api-manifest.yml | kubectl apply -f -
+envsubst < ./services/AcademyIO.Courses.API/courses-api-manifest.yml | kubectl apply -f -
+envsubst < ./services/AcademyIO.Students.API/students-api-manifest.yml | kubectl apply -f -
+envsubst < ./services/AcademyIO.Payments.API/payments-api-manifest.yml | kubectl apply -f -
+envsubst < ./api-gateways/AcademyIO.Bff/bff-manifest.yml | kubectl apply -f -
 ```
 
 Para verificar o status, use `kubectl get pods` e `kubectl get services`. O BFF estará acessível através do IP externo do seu `LoadBalancer`.
@@ -165,8 +164,15 @@ Este repositório está configurado com pipelines de CI/CD em `.github/workflows
 - **Como funciona:** Para cada microsserviço, um workflow é acionado em todo `push` ou `pull_request` para a branch `main`.
 - **Etapas:** O pipeline executa `build`, `lint` (verificação de formato), e `testes`.
 - **Publicação:** Se as etapas anteriores passarem em um push para a `main`, uma imagem Docker é construída e publicada no Docker Hub.
+- **Qualidade e Segurança:** O pipeline agora inclui análise estática com **SonarQube**, verificação de vulnerabilidades com **Trivy** e **Dependabot**, e falha se a cobertura de testes (Branch Coverage) for inferior a **80%**.
 
 Para que a publicação funcione, você deve configurar os seguintes segredos no seu repositório GitHub (`Settings > Secrets and variables > Actions`):
 
 - `DOCKERHUB_USERNAME`: Seu nome de usuário do Docker Hub.
 - `DOCKERHUB_TOKEN`: Um token de acesso do Docker Hub com permissões de escrita.
+
+### 🛡️ Segurança e Monitoramento
+
+- **HTTPS/TLS:** Os manifestos agora incluem recursos de `Ingress` configurados para TLS. Certifique-se de ter um Ingress Controller e o Cert-Manager instalados no cluster.
+- **Scan de Vulnerabilidades:** Um workflow do GitHub Actions (`trivy.yml`) foi adicionado para escanear o código e a infraestrutura (IaC) em busca de vulnerabilidades críticas.
+- **Rotação de Segredos:** Para ambientes de produção, recomenda-se o uso de soluções como Azure Key Vault ou HashiCorp Vault integrados ao Kubernetes (via Secrets Store CSI Driver) para gerenciar e rotacionar senhas como `SA_PASSWORD`, em vez de segredos estáticos.

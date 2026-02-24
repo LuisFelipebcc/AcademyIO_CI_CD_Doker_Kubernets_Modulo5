@@ -15,6 +15,8 @@ builder.Services.AddRepositories();
 builder.Services.AddServices();
 builder.Services.AddMessageBus(builder.Configuration.GetConnectionString("MessageBus"));
 
+builder.Services.AddOpenTelemetryConfiguration(builder.Configuration, "AcademyIO.Payments.API");
+
 builder.Services.AddHealthChecks()
     .AddCheck("live", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: new[] { "live" })
     .AddDbContextCheck<PaymentsContext>(tags: new[] { "ready" });

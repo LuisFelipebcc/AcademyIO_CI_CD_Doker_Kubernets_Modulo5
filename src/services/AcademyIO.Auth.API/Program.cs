@@ -22,6 +22,8 @@ builder.Services.AddSwaggerConfiguration();
 
 builder.Services.AddMessageBusConfiguration(builder.Configuration);
 
+builder.Services.AddOpenTelemetryConfiguration(builder.Configuration, "AcademyIO.Auth.API");
+
 // Add services to the container.
 
 builder.Services.AddControllers();

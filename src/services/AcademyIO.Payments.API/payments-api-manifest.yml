@@ -1,9 +1,23 @@
+# --- INSTRUÇÕES PARA CRIAÇÃO DE SECRETS ---
+# Os segredos reais NÃO devem ser versionados. Crie-os manualmente no cluster:
+#
+# kubectl create secret generic payments-api-secret -n academyio \
+#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=PaymentsDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true' \
+#   --from-literal=Payments__ProviderApiKey='sua-api-key-real-do-provedor'
+# ------------------------------------------
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: payments-api-deployment
+  namespace: academyio
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: payments-api
@@ -14,10 +28,10 @@ spec:
     spec:
       containers:
         - name: payments-api
-          image: {{DOCKERHUB_USERNAME}}/academyio-payments-api:latest # Substitua {{DOCKERHUB_USERNAME}} pelo seu usuário no Docker Hub
+          image: luisfelipebcc/academyio-payments-api:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           envFrom:
             - configMapRef:
                 name: payments-api-config
@@ -26,14 +40,14 @@ spec:
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 80
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 20
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
@@ -49,37 +63,22 @@ apiVersion: v1
 kind: Service
 metadata:
   name: payments-api-service
+  namespace: academyio
 spec:
   selector:
     app: payments-api
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
   type: ClusterIP
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: payments-api-config
+  namespace: academyio
 data:
   ASPNETCORE_ENVIRONMENT: "Production"
   DOTNET_RUNNING_IN_CONTAINER: "true"
-  ASPNETCORE_URLS: "http://*:80"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: payments-api-secret
-type: Opaque
-# --- ATENÇÃO ---
-# Este arquivo é um template. Os segredos reais NÃO devem ser versionados.
-# Crie o segredo no cluster Kubernetes antes de fazer o deploy.
-#
-# Exemplo de comando para criar o segredo:
-# kubectl create secret generic payments-api-secret \
-#   --from-literal=ConnectionStrings__DefaultConnection='Server=sqlserver-service;Database=PaymentsDb;User Id=sa;Password=<YourStrong!Passw0rd>;TrustServerCertificate=true' \
-#   --from-literal=Payments__ProviderApiKey='sua-api-key-real-do-provedor'
-#
-# O campo 'stringData' foi omitido intencionalmente do controle de versão.
-stringData: {}
+  ASPNETCORE_URLS: "http://*:8080"

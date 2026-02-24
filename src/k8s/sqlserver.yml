@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: sqlserver-service
+  namespace: academyio
 spec:
   selector:
     app: sqlserver
@@ -15,8 +16,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sqlserver-deployment
+  namespace: academyio
 spec:
   replicas: 1
+  strategy:
+    type: Recreate # Evita problemas de lock em volumes persistentes
   selector:
     matchLabels:
       app: sqlserver
@@ -25,31 +29,66 @@ spec:
       labels:
         app: sqlserver
     spec:
+      securityContext:
+        fsGroup: 10001
       containers:
-      - name: sqlserver
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        ports:
-        - containerPort: 1433
-        env:
-        - name: ACCEPT_EULA
-          value: "Y"
-        - name: SA_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: sql-server-secret
-              key: SA_PASSWORD
-        volumeMounts:
-        - name: mssql-storage
-          mountPath: /var/opt/mssql
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          ports:
+            - containerPort: 1433
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sql-server-secret
+                  key: SA_PASSWORD
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -C -Q "SELECT 1"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $SA_PASSWORD -C -Q "SELECT 1"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: mssql-storage
+              mountPath: /var/opt/mssql
       volumes:
-      - name: mssql-storage
-        persistentVolumeClaim:
-          claimName: mssql-pvc
+        - name: mssql-storage
+          persistentVolumeClaim:
+            claimName: mssql-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mssql-pvc
+  namespace: academyio
 spec:
   accessModes:
     - ReadWriteOnce
